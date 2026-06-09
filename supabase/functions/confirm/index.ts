@@ -50,14 +50,18 @@ Deno.serve(async (req) => {
 
     const supabase = serviceClient();
 
-    // Vérifie le code OTP. Le code provenant de generateLink({type:"magiclink"})
-    // se vérifie selon les versions avec le type "email" ou "magiclink" — on
-    // tente les deux pour être robuste. Un type qui ne correspond pas renvoie
-    // une erreur SANS consommer le bon jeton (GoTrue cherche dans la mauvaise
-    // colonne), donc l'ordre n'invalide pas le code.
+    // Vérifie le code OTP. Le type attendu par verifyOtp dépend de l'état du
+    // compte :
+    //   - "email"    → code OTP d'un utilisateur déjà confirmé (login)
+    //   - "magiclink"→ variante lien magique
+    //   - "signup"   → utilisateur créé mais JAMAIS confirmé (cas fréquent ici :
+    //                  comptes laissés non confirmés à l'époque du lien magique
+    //                  cassé par otp_expired). C'est ce type qui débloque.
+    // Un type qui ne correspond pas renvoie une erreur SANS consommer le bon
+    // jeton (GoTrue cherche dans la mauvaise colonne), donc l'ordre est sûr.
     let user = null;
     const attempts: string[] = [];
-    for (const type of ["email", "magiclink"] as const) {
+    for (const type of ["email", "magiclink", "signup"] as const) {
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token: code,
