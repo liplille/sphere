@@ -147,7 +147,7 @@ window.HUD = (function () {
     if (!dreamInput || dreamInput.value.trim().length === 0) renderReals();
   }, 4000);
 
-  // Aperçu pendant la frappe (cosmétique ; le submit fait foi)
+  // Pendant la frappe : indicateurs en attente d'analyse, reals inchangés.
   if (dreamInput) {
     dreamInput.addEventListener("input", (e) => {
       const length = e.target.value.trim().length;
@@ -155,27 +155,14 @@ window.HUD = (function () {
         elComplexity.innerText = "EN ATTENTE";
         elClarity.innerText = "EN ATTENTE";
         elClarity.style.color = "";
-        renderReals();
-        return;
-      }
-      let c, cl, r;
-      if (length < 15) {
-        c = "BASIQUE";
-        cl = "TROUBLE";
-        r = realsBase + 12;
-      } else if (length < 40) {
-        c = "PROFONDE";
-        cl = "NETTE";
-        r = realsBase + 48;
       } else {
-        c = "CRYPTIQUE";
-        cl = "LIMPIDE";
-        r = realsBase + Math.floor(length * 1.5) + 50;
+        // Les vraies valeurs arrivent après le retour de Claude —
+        // on indique juste que l'analyse est en cours.
+        elComplexity.innerText = "ANALYSE...";
+        elClarity.innerText = "ANALYSE...";
+        elClarity.style.color = "rgba(255,255,255,0.5)";
       }
-      elComplexity.innerText = c;
-      elClarity.innerText = cl;
-      elClarity.style.color = clarityColor(cl);
-      elReals.innerText = r + " REALS";
+      // Les REALS ne bougent PAS pendant la frappe : seul Claude les fixe.
     });
   }
 

@@ -269,13 +269,16 @@ if (btnAncrageDream) {
     const DASHES = 10;
     let dashCount = 0;
     const scanInterval = setInterval(() => {
-      dashCount = (dashCount >= DASHES) ? 0 : dashCount + 1;
+      dashCount = dashCount >= DASHES ? 0 : dashCount + 1;
       const filled = "—".repeat(dashCount);
-      const empty  = " ".repeat(DASHES - dashCount); // espaces insécables
+      const empty = " ".repeat(DASHES - dashCount); // espaces insécables
       if (btnSubmit) btnSubmit.textContent = "[ " + filled + empty + " ]";
     }, 120);
 
-    if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.style.opacity = "0.6"; }
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.style.opacity = "0.6";
+    }
 
     // Restaure le bouton à la fin du GPS (succès ou erreur).
     function restoreSubmit() {
@@ -298,7 +301,7 @@ if (btnAncrageDream) {
 
         restoreSubmit();
         if (res && res.ok) {
-          btnAncrageDream.textContent = "SPHÈRE ANCRÉE";
+          btnAncrageDream.textContent = "SPHÈRE EST ANCRÉE";
           btnAncrageDream.style.opacity = "1";
           btnAncrageDream.style.backgroundColor = "rgba(255, 204, 85, 0.15)";
           btnAncrageDream.style.cursor = "default";
