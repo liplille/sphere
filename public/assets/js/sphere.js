@@ -259,11 +259,13 @@ if (btnAncrageDream) {
   btnAncrageDream.addEventListener("click", function (e) {
     e.preventDefault();
 
-    // Désactivé immédiatement pour bloquer les re-clics et éviter toute
-    // interférence avec « Confier à la sphère » pendant le dialog GPS natif.
+    // Pendant la recherche GPS : ancrage bloqué (re-clic) + submit désactivé
+    // (les deux opérations ne doivent pas tourner en parallèle).
     btnAncrageDream.disabled = true;
     btnAncrageDream.textContent = "RECHERCHE DE LA POSITION...";
     btnAncrageDream.style.opacity = "0.5";
+    const btnSubmit = document.getElementById("btn-submit-dream");
+    if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.style.opacity = "0.4"; }
 
     // 2. Demande des coordonnées au navigateur
     navigator.geolocation.getCurrentPosition(
@@ -274,36 +276,33 @@ if (btnAncrageDream) {
           pos.coords.longitude,
         );
 
+        const btnSubmit = document.getElementById("btn-submit-dream");
         if (res && res.ok) {
-          // 4. Succès serveur : Mise à jour du bouton
           btnAncrageDream.textContent = "SPHÈRE ANCRÉE";
           btnAncrageDream.style.opacity = "1";
           btnAncrageDream.style.backgroundColor = "rgba(255, 204, 85, 0.15)";
           btnAncrageDream.style.cursor = "default";
-          btnAncrageDream.disabled = true; // Empêche le multi-clic
-
-          // 5. Mise à jour du HUD
+          // ancrage définitif : btn ancrage reste disabled, submit réactivé
+          if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.style.opacity = ""; }
           HUD.setAnchored();
-
-          // NOUVEAU : On ajoute visuellement la récompense si le serveur l'a validée (10 REALS)
-          if (res.awarded && res.awarded > 0) {
-            HUD.addReals(res.awarded);
-          }
-
+          if (res.awarded && res.awarded > 0) HUD.addReals(res.awarded);
           if (typeof playWake === "function") playWake();
         } else {
-          // Échec serveur : on re-active pour permettre un retry
+          // Échec serveur : retry possible sur les deux boutons
           btnAncrageDream.textContent = "ÉCHEC RÉSEAU. RÉESSAYER ?";
           btnAncrageDream.style.opacity = "1";
           btnAncrageDream.disabled = false;
+          if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.style.opacity = ""; }
         }
       },
       (err) => {
-        // Refus ou erreur GPS : on re-active pour permettre un retry
+        // Refus ou erreur GPS : retry possible sur les deux boutons
         console.warn("Ancrage refusé ou impossible", err);
         btnAncrageDream.textContent = "SIGNAL PERDU. RÉESSAYER ?";
         btnAncrageDream.style.opacity = "1";
         btnAncrageDream.disabled = false;
+        const btnSubmit = document.getElementById("btn-submit-dream");
+        if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.style.opacity = ""; }
       },
       // NOUVEAU : on force la haute précision pour éviter un échec sur les mobiles capricieux
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
