@@ -45,6 +45,9 @@ verify_jwt = false
 [functions.sync]
 verify_jwt = false
 
+[functions.confirm]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322

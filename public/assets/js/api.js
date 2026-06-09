@@ -105,7 +105,7 @@ window.API = {
     }
   },
 
-  // Étape 6 - Inscription (Q3)
+  // Étape 6 - Inscription (Q3) : déclenche l'envoi du code 6 chiffres par email
   async registerAccount(email) {
     try {
       const res = await fetch(window.FN_BASE + "/register", {
@@ -120,6 +120,26 @@ window.API = {
       return await res.json();
     } catch (e) {
       console.error("Erreur réseau /register:", e);
+      return { ok: false };
+    }
+  },
+
+  // Étape 8 - Vérifie le code OTP saisi → rattache la session au compte.
+  // Renvoie le même payload que syncData (reals, filaments, anchored, ...).
+  async confirmCode(email, code) {
+    try {
+      const res = await fetch(window.FN_BASE + "/confirm", {
+        method: "POST",
+        headers: fnHeaders(),
+        body: JSON.stringify({ token: SESSION_TOKEN, email: email, code: code }),
+      });
+      if (!res.ok && res.status !== 401 && res.status !== 400) {
+        console.error("Erreur HTTP /confirm:", res.status);
+        return { ok: false };
+      }
+      return await res.json();
+    } catch (e) {
+      console.error("Erreur réseau /confirm:", e);
       return { ok: false };
     }
   },

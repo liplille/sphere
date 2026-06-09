@@ -125,6 +125,39 @@
             Sauvegarder ma sphère
           </button>
         </div>
+        <div id="email-code-view" style="display: none">
+          <h2 style="margin-bottom: 16px">
+            Un code à 6 chiffres vient de t'être envoyé. Saisis-le pour sceller
+            ton alliance :
+          </h2>
+          <input
+            type="text"
+            id="code-input"
+            class="input-field"
+            placeholder="• • • • • •"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            style="
+              text-align: center;
+              letter-spacing: 10px;
+              font-size: 24px;
+              font-family: monospace;
+            "
+          />
+          <div
+            id="code-error"
+            style="
+              color: #ff4444;
+              min-height: 18px;
+              margin: 8px 0;
+              font-size: 14px;
+            "
+          ></div>
+          <button id="btn-submit-code" class="btn-submit">
+            Confirmer l'alliance
+          </button>
+        </div>
         <div id="email-success-view" style="display: none">
           <h2 style="margin-bottom: 0">
             La sphère va se personnaliser, reviens plus tard.

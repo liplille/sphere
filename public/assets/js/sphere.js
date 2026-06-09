@@ -695,24 +695,19 @@ document
 
     HUD.setState("PERSONNALISATION...", "#ffcc55"); // S'allume en Or
 
-    // 🚨 L'APPEL AU SERVEUR EST ICI 🚨
+    // 🚨 L'APPEL AU SERVEUR EST ICI 🚨 (envoi du code 6 chiffres par email)
     const res = await window.API.registerAccount(emailVal);
 
     if (res && res.ok) {
-      // SUCCÈS
-      emailSuccessView.innerHTML =
-        "<h2 style=\"margin-bottom: 0\">La sphère t'a envoyé l'alliance. Vérifie tes emails.</h2>";
-
+      // Le code est parti : on bascule sur la saisie du code OTP.
+      pendingEmail = emailVal;
+      emailSuccessView.style.display = "none";
+      emailCodeView.style.display = "block";
+      HUD.setState("EN ATTENTE DU CODE...", "#ffcc55");
       setTimeout(() => {
-        modalEmail.classList.remove("active");
-        isUiBlocking = false;
-        appStep = 4;
-        HUD.setOnline();
-      }, 3000);
-
-      setTimeout(() => {
-        HUD.setStateColor("");
-      }, 10000);
+        const ci = document.getElementById("code-input");
+        if (ci) ci.focus();
+      }, 100);
     } else {
       // ÉCHEC DU SERVEUR
       emailSuccessView.innerHTML =
@@ -723,6 +718,56 @@ document
         emailFormView.style.display = "block";
         HUD.setState("ÉCOUTE ACTIVE");
       }, 3000);
+    }
+  });
+
+// --- Étape 8 : saisie + vérification du code OTP -------------------------
+let pendingEmail = "";
+const emailCodeView = document.getElementById("email-code-view");
+const codeInput = document.getElementById("code-input");
+const codeError = document.getElementById("code-error");
+
+document
+  .getElementById("btn-submit-code")
+  .addEventListener("click", async () => {
+    const code = (codeInput.value || "").replace(/\D/g, "");
+    if (code.length !== 6) {
+      codeError.textContent = "Le code comporte 6 chiffres.";
+      return;
+    }
+    codeError.textContent = "";
+    HUD.setState("VÉRIFICATION...", "#ffcc55");
+
+    const res = await window.API.confirmCode(pendingEmail, code);
+
+    if (res && res.ok) {
+      // Alliance scellée : on synchronise l'état et on passe CONNECTÉ.
+      window.API.setToken(res.token);
+      HUD.setReals(res.reals);
+      HUD.setFilaments(res.filaments);
+      if (res.anchored) HUD.setAnchored();
+      if (res.complexity && res.clarity)
+        HUD.setIndicators(res.complexity, res.clarity);
+
+      emailCodeView.style.display = "none";
+      emailSuccessView.style.display = "block";
+      emailSuccessView.innerHTML =
+        '<h2 style="margin-bottom: 0; color:#00f3ff">Alliance confirmée. Ta sphère est connectée.</h2>';
+
+      setTimeout(() => {
+        modalEmail.classList.remove("active");
+        isUiBlocking = false;
+        appStep = 4;
+        HUD.setOnline();
+      }, 2500);
+      setTimeout(() => HUD.setStateColor(""), 10000);
+    } else {
+      // Code refusé : on laisse l'utilisateur réessayer.
+      codeError.textContent =
+        res && res.error === "rate_limited"
+          ? "Trop de tentatives. Patiente quelques minutes."
+          : "Code invalide ou expiré. Réessaie.";
+      HUD.setState("EN ATTENTE DU CODE...", "#ffcc55");
     }
   });
 

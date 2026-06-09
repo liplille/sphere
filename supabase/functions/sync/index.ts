@@ -5,6 +5,7 @@
 
 import { handleCors, corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/client.ts";
+import { rateLimitByIp } from "../_shared/ratelimit.ts";
 
 Deno.serve(async (req) => {
   const pre = handleCors(req);
@@ -20,6 +21,16 @@ Deno.serve(async (req) => {
     });
 
   try {
+    // Rate limit généreux : /sync est appelé à chaque chargement de page.
+    // 60 requêtes / 60 s par IP — n'entrave jamais un usage normal, mais
+    // coupe le bouclage abusif (lecture DB en rafale).
+    if (!(await rateLimitByIp("sync", req, 60, 60))) {
+      return new Response(JSON.stringify({ ok: false, error: "rate_limited" }), {
+        status: 429,
+        headers,
+      });
+    }
+
     const supabase = serviceClient();
 
     // On extrait le jeton d'authentification s'il provient de l'email
@@ -76,6 +87,11 @@ Deno.serve(async (req) => {
     const lastIntention =
       intentions && intentions.length > 0 ? intentions[0] : null;
 
+    // ⚠️ FILTRE DE SORTIE — ne JAMAIS exposer de données sensibles au client.
+    // On renvoie uniquement le strict nécessaire à l'affichage HUD :
+    //   reals, filaments, anchored (booléen), registered (booléen), indicateurs.
+    // Les champs lat/lng/city/country/address de `sessions` restent côté serveur
+    // et ne doivent JAMAIS être ajoutés ici (RGPD + vie privée).
     return new Response(
       JSON.stringify({
         ok: true,
