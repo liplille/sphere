@@ -52,8 +52,11 @@ Deno.serve(async (req) => {
 
     // Vérifie le code OTP. Le code provenant de generateLink({type:"magiclink"})
     // se vérifie selon les versions avec le type "email" ou "magiclink" — on
-    // tente "email" puis on retombe sur "magiclink" pour être robuste.
+    // tente les deux pour être robuste. Un type qui ne correspond pas renvoie
+    // une erreur SANS consommer le bon jeton (GoTrue cherche dans la mauvaise
+    // colonne), donc l'ordre n'invalide pas le code.
     let user = null;
+    const attempts: string[] = [];
     for (const type of ["email", "magiclink"] as const) {
       const { data, error } = await supabase.auth.verifyOtp({
         email,
@@ -64,9 +67,12 @@ Deno.serve(async (req) => {
         user = data.user;
         break;
       }
+      attempts.push(`${type}: ${error?.message || "no user"}`);
     }
 
     if (!user) {
+      // Logge la raison exacte (visible via `supabase functions logs confirm`).
+      console.error("verifyOtp échec —", { email, codeLen: code.length, attempts });
       return new Response(
         JSON.stringify({ ok: false, error: "Code invalide ou expiré" }),
         { status: 401, headers },
