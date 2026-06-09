@@ -36,6 +36,9 @@ verify_jwt = false
 [functions.geo]
 verify_jwt = false
 
+[functions.reals]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322

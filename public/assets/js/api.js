@@ -59,10 +59,23 @@ window.API = {
     }
   },
 
-  // +10 REALS d'exploration (Q2) — MOCK (Étape 5)
+  // +10 REALS d'exploration (Q2) — Appel réel
   async addReals(n) {
-    await new Promise((r) => setTimeout(r, 150));
-    return { ok: true, added: n };
+    try {
+      const res = await fetch(window.FN_BASE + "/reals", {
+        method: "POST",
+        headers: fnHeaders(),
+        body: JSON.stringify({ token: SESSION_TOKEN, amount: n }),
+      });
+      if (!res.ok) {
+        console.error("Erreur HTTP /reals:", res.status);
+        return { ok: false };
+      }
+      return await res.json();
+    } catch (e) {
+      console.error("Erreur réseau /reals:", e);
+      return { ok: false };
+    }
   },
 
   // Création de compte — MOCK (Étape 6)
