@@ -738,6 +738,7 @@ function showCodeEntry(email) {
   isUiBlocking = true;
   appStep = 3;
   if (exploreCount) exploreCount.innerText = "0";
+  if (introUi) introUi.style.opacity = "0";
   emailFormView.style.display = "none";
   emailSuccessView.style.display = "none";
   emailCodeView.style.display = "block";
