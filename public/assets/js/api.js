@@ -1,12 +1,14 @@
 // ============================================================
 // api.js — Couche d'accès au backend (window.API).
-// Étape 3 : submitIntention réel.  Étape 4 : saveGeo réel.
-// addReals / register restent en MOCK (Étapes 5-6).
 // ============================================================
 
-const SESSION_TOKEN =
-  (window.crypto && crypto.randomUUID && crypto.randomUUID()) ||
-  String(Date.now()) + "-" + Math.random().toString(16).slice(2);
+let SESSION_TOKEN = localStorage.getItem("sphere_session_token");
+if (!SESSION_TOKEN) {
+  SESSION_TOKEN =
+    (window.crypto && crypto.randomUUID && crypto.randomUUID()) ||
+    String(Date.now()) + "-" + Math.random().toString(16).slice(2);
+  localStorage.setItem("sphere_session_token", SESSION_TOKEN);
+}
 
 function fnHeaders() {
   return {
@@ -18,6 +20,31 @@ function fnHeaders() {
 
 window.API = {
   token: SESSION_TOKEN,
+
+  // Permet d'adopter la session d'un autre appareil
+  setToken(t) {
+    SESSION_TOKEN = t;
+    this.token = t;
+    localStorage.setItem("sphere_session_token", t);
+  },
+
+  // Synchronisation au chargement / retour d'email
+  async syncData(jwt = null) {
+    const headers = fnHeaders();
+    if (jwt) headers["authorization"] = "Bearer " + jwt;
+
+    try {
+      const res = await fetch(window.FN_BASE + "/sync", {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({ token: SESSION_TOKEN }),
+      });
+      if (!res.ok) return { ok: false };
+      return await res.json();
+    } catch (e) {
+      return { ok: false };
+    }
+  },
 
   // Q1 -> { coherent, response, complexity, clarity, reals } | { coherent:false, error:true }
   async submitIntention(text) {
@@ -59,7 +86,7 @@ window.API = {
     }
   },
 
-  // +10 REALS d'exploration (Q2) — Appel réel
+  // +10 REALS d'exploration (Q2)
   async addReals(n) {
     try {
       const res = await fetch(window.FN_BASE + "/reals", {
@@ -78,9 +105,22 @@ window.API = {
     }
   },
 
-  // Création de compte — MOCK (Étape 6)
-  async register(email) {
-    await new Promise((r) => setTimeout(r, 800));
-    return { ok: true, email };
+  // Étape 6 - Inscription (Q3)
+  async registerAccount(email) {
+    try {
+      const res = await fetch(window.FN_BASE + "/register", {
+        method: "POST",
+        headers: fnHeaders(),
+        body: JSON.stringify({ token: SESSION_TOKEN, email: email }),
+      });
+      if (!res.ok) {
+        console.error("Erreur HTTP /register:", res.status);
+        return { ok: false };
+      }
+      return await res.json();
+    } catch (e) {
+      console.error("Erreur réseau /register:", e);
+      return { ok: false };
+    }
   },
 };

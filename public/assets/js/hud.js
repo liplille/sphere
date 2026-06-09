@@ -72,7 +72,20 @@ window.HUD = (function () {
     elMessaging.innerText = "ACTIVE";
     elMessaging.style.color = "#00f3ff";
   }
+  function setFilaments(n) {
+    filaments = n;
+    if (elFilaments)
+      elFilaments.innerText =
+        filaments + (filaments > 1 ? " FILAMENTS" : " FILAMENT");
+  }
 
+  function setAnchored() {
+    anchored = true;
+    if (elLocation) {
+      elLocation.innerText = "ANCRÉ";
+      elLocation.style.color = "#00f3ff";
+    }
+  }
   // Ancrage cliquable à tout moment : position HAUTE PRÉCISION envoyée au backend.
   function initAncrage(onAnchor) {
     if (!elLocation) return;
@@ -178,5 +191,7 @@ window.HUD = (function () {
     activateMessaging,
     initAncrage,
     isAnchored: () => anchored,
+    setFilaments,
+    setAnchored, // <-- Lignes rajoutées
   };
 })();

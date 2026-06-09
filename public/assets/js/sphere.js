@@ -49,7 +49,56 @@ const emailInput = document.getElementById("email-input");
 // filaments, ancrage, réseau) vit dans hud.js (window.HUD).
 // Ici on ne garde que le compteur d'explorations, piloté par la machine à états.
 const exploreCount = document.getElementById("explore-count");
+/* ============================================================
+  3.5. SYNCHRONISATION SERVEUR (Cross-device & Refresh)
+============================================================ */
+async function bootSync() {
+  const hash = window.location.hash;
+  let jwt = null;
 
+  // Si on vient de cliquer sur le lien de l'email
+  if (hash.includes("access_token=")) {
+    const params = new URLSearchParams(hash.substring(1));
+    jwt = params.get("access_token");
+    window.history.replaceState(null, null, window.location.pathname); // Nettoie l'URL
+  }
+
+  // On interroge le serveur
+  const data = await window.API.syncData(jwt);
+
+  if (data && data.ok) {
+    // 1. On adopte le token de l'appareil d'origine
+    window.API.setToken(data.token);
+
+    // 2. Restaure l'affichage (REALS, Filaments, Ancrage, Indicateurs)
+    HUD.setReals(data.reals);
+    HUD.setFilaments(data.filaments);
+    if (data.anchored) HUD.setAnchored();
+    if (data.complexity && data.clarity) {
+      HUD.setIndicators(data.complexity, data.clarity);
+    }
+
+    // 3. Rétablit l'état Connecté si l'utilisateur a déjà donné son email
+    if (data.registered) {
+      appStep = 4; // L'UI bloque la demande d'email
+      introUi.style.opacity = "0";
+      exploreCount.innerText = "0"; // <-- CORRECTION : Cache les 3 explorations
+      setTimeout(() => HUD.setOnline(), 200);
+
+      // Petit toast de bienvenue si on arrive PILE via un lien email valide
+      if (jwt) {
+        setTimeout(() => {
+          toastExploration.innerHTML =
+            "<strong style='color:#00f3ff'>Alliance confirmée.</strong><br>Ta sphère a synchronisé tes données.";
+          toastExploration.classList.add("active");
+          setTimeout(() => toastExploration.classList.remove("active"), 4000);
+        }, 1000);
+      }
+    }
+  }
+}
+
+bootSync(); // Lancement immédiat au chargement de la page
 /* ============================================================
          4. MOTEUR 3D (scène, caméra, rendu, contrôles)
          ============================================================ */
@@ -632,29 +681,50 @@ document.getElementById("btn-close-dream").addEventListener("click", () => {
   appStep = 2;
 });
 
-document.getElementById("btn-submit-email").addEventListener("click", () => {
-  const emailVal = emailInput.value.trim();
-  if (!emailVal) return;
-  emailFormView.style.display = "none";
-  emailSuccessView.style.display = "block";
+document
+  .getElementById("btn-submit-email")
+  .addEventListener("click", async () => {
+    const emailVal = emailInput.value.trim();
+    if (!emailVal) return;
 
-  HUD.setState("PERSONNALISATION...", "#ffcc55"); // S'allume en Or
+    // Affiche un loader pendant que le serveur travaille
+    emailFormView.style.display = "none";
+    emailSuccessView.style.display = "block";
+    emailSuccessView.innerHTML =
+      '<h2 style="margin-bottom: 0">Création de l\'alliance...</h2><div class="loader" style="margin-top:20px"><div></div><div></div><div></div></div>';
 
-  // Disparition de la modale après 3 secondes : passage en ligne.
-  // (La messagerie reste INACTIVE — un futur concept l'activera.)
-  setTimeout(() => {
-    modalEmail.classList.remove("active");
-    isUiBlocking = false;
-    appStep = 4;
+    HUD.setState("PERSONNALISATION...", "#ffcc55"); // S'allume en Or
 
-    HUD.setOnline();
-  }, 3000);
+    // 🚨 L'APPEL AU SERVEUR EST ICI 🚨
+    const res = await window.API.registerAccount(emailVal);
 
-  // Perte de la couleur Or après 10 secondes (10000 millisecondes)
-  setTimeout(() => {
-    HUD.setStateColor(""); // Rétablit la couleur par défaut en douceur
-  }, 10000);
-});
+    if (res && res.ok) {
+      // SUCCÈS
+      emailSuccessView.innerHTML =
+        "<h2 style=\"margin-bottom: 0\">La sphère t'a envoyé l'alliance. Vérifie tes emails.</h2>";
+
+      setTimeout(() => {
+        modalEmail.classList.remove("active");
+        isUiBlocking = false;
+        appStep = 4;
+        HUD.setOnline();
+      }, 3000);
+
+      setTimeout(() => {
+        HUD.setStateColor("");
+      }, 10000);
+    } else {
+      // ÉCHEC DU SERVEUR
+      emailSuccessView.innerHTML =
+        '<h2 style="margin-bottom: 0; color:#ff4444">La sphère est troublée. Réessaie.</h2>';
+
+      setTimeout(() => {
+        emailSuccessView.style.display = "none";
+        emailFormView.style.display = "block";
+        HUD.setState("ÉCOUTE ACTIVE");
+      }, 3000);
+    }
+  });
 
 /* ============================================================
          14b. AIDES FORMULAIRE (cohérence / erreur)
