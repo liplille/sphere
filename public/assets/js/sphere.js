@@ -690,6 +690,7 @@ function triggerNextStep() {
     isUiBlocking = true;
     setTimeout(() => {
       exploreCount.innerText = "0";
+      HUD.setState("ASSIMILATION DES INTENTIONS", "#00f3ff");
       modalEmail.classList.add("active");
     }, 1200);
   }
@@ -861,10 +862,22 @@ document
 //  - sinon, email mémorisé en localStorage (même appareil, onglet fermé)
 // On n'affiche le champ code QUE si l'utilisateur n'est pas déjà connecté.
 function resumePendingConfirmation() {
-  if (appStep === 4) return; // déjà connecté (bootSync l'a établi)
-
   const params = new URLSearchParams(window.location.search);
   const fromLink = params.get("confirm");
+
+  // Nettoie TOUJOURS l'URL si ?confirm= est présent (même si déjà connecté),
+  // pour ne pas laisser l'email visible ou dans l'historique navigateur.
+  if (fromLink) {
+    window.history.replaceState(null, null, window.location.pathname);
+  }
+
+  if (appStep === 4) {
+    // Déjà connecté (bootSync l'a établi) : on nettoie juste le localStorage
+    // si le pending email traîne encore.
+    localStorage.removeItem("sphere_pending_email");
+    return;
+  }
+
   const stored = localStorage.getItem("sphere_pending_email");
   const email =
     (fromLink && fromLink.includes("@") ? fromLink : null) || stored;
@@ -872,10 +885,6 @@ function resumePendingConfirmation() {
   if (!email) return;
 
   localStorage.setItem("sphere_pending_email", email);
-  if (fromLink) {
-    // Nettoie l'URL (évite de laisser l'email dans l'historique / au partage)
-    window.history.replaceState(null, null, window.location.pathname);
-  }
   setTimeout(() => showCodeEntry(email), 600);
 }
 
