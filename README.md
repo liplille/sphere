@@ -46,19 +46,30 @@ yesin-sphere/
 │           └── api.js            ← appels fetch vers les Edge Functions
 │
 └── supabase/                     ← déployé via `supabase` CLI (PAS sur n0c)
-    ├── config.toml
-    ├── migrations/
-    │   └── 0001_init.sql         ← tables + RLS + policies
+    ├── config.toml               ← verify_jwt=false pour TOUTES les fonctions
+    ├── migrations/               ← SQL séquentiel horodaté (jamais ré-éditer)
+    │   ├── …0001_init.sql        ← tables redirects/scan_events/sessions/intentions + RLS
+    │   ├── …0002_grants.sql      ← GRANT explicites à service_role (auto-expose OFF)
+    │   ├── …0003_ratelimit.sql   ← table rate_limits + RPC check_rate_limit()
+    │   └── …0004_geo.sql         ← sessions.address (lat/lng/city/country déjà en 0001)
     └── functions/
         ├── _shared/
         │   ├── cors.ts           ← headers CORS (origine yesin.media)
         │   ├── client.ts         ← client Supabase service_role
+        │   ├── ratelimit.ts      ← limiteur partagé (DB-backed, fail-open)
         │   └── prompt.ts         ← le prompt Claude
-        ├── intention/index.ts    ← POST /functions/v1/intention
-        ├── geo/index.ts          ← POST /functions/v1/geo
-        ├── reals/index.ts        ← POST /functions/v1/reals
-        └── register/index.ts     ← POST /functions/v1/register
+        ├── intention/index.ts    ← POST /functions/v1/intention (Claude, rate-limité)
+        ├── geo/index.ts          ← POST /functions/v1/geo (reverse-geocoding Nominatim)
+        ├── reals/index.ts        ← POST /functions/v1/reals (+10 exploration, rate-limité)
+        ├── register/index.ts     ← POST /functions/v1/register (génère + email le code OTP)
+        ├── confirm/index.ts      ← POST /functions/v1/confirm (vérifie le code OTP, rate-limité)
+        └── sync/index.ts         ← POST /functions/v1/sync (resynchro cross-device, rate-limité)
 ```
+
+> **Token de session côté client** : généré par le navigateur et **persisté en
+> `localStorage`** (`sphere_session_token`, voir `api.js`). Toutes les données
+> réelles (reals, filaments, indicateurs, état connecté) viennent du serveur via
+> `/sync` — le client ne fait jamais autorité sur les valeurs.
 
 ### Côté n0c (rappel cPanel)
 
@@ -185,11 +196,16 @@ Une session = un visiteur (avant compte). Rattachée à un user après l'email.
 | user_id       | uuid FK auth.users | nullable (rempli au register)         |
 | reals_total   | int                | total cumulé                          |
 | geo_granted   | bool               | position partagée ?                   |
-| lat           | float8             | nullable — position précise           |
-| lng           | float8             | nullable                              |
+| lat           | float8             | nullable — position précise (serveur) |
+| lng           | float8             | nullable (serveur)                    |
 | city          | text               | nullable (pour l'admin)               |
 | country       | text               | nullable                              |
+| address       | text               | nullable — adresse complète (mig 0004)|
 | created_at    | timestamptz        |                                       |
+
+> ⚠️ `lat/lng/city/country/address` sont **réservées au serveur**. `/sync` et
+> `/confirm` ne renvoient **jamais** ces champs au navigateur — seul le booléen
+> `anchored` (= `geo_granted`) sort.
 
 ### `intentions`
 
@@ -207,7 +223,25 @@ Une ligne par réponse Q1 cohérente.
 | reals       | int         | reals attribués pour cette intention                          |
 | created_at  | timestamptz |                                                               |
 
+### `rate_limits` (migration 0003)
+
+Limiteur de débit partagé (fenêtre fixe atomique). Touché uniquement par `service_role` via la RPC `check_rate_limit(bucket, max, window_seconds)`.
+
+| Colonne      | Type        | Note                              |
+| ------------ | ----------- | --------------------------------- |
+| bucket       | text PK     | ex. `intention-ip:<hash>`         |
+| window_start | timestamptz | début de la fenêtre courante      |
+| count        | int         | nombre de hits dans la fenêtre    |
+
 Le compte utilisateur est géré par `auth.users` (Supabase Auth). Pas besoin de table `users` séparée pour la V1.
+
+### Synchronisation cross-device (`/sync`, hors-roadmap initiale)
+
+`sessions.user_id` est rempli lors de la **confirmation du code OTP** (`/confirm`). À partir de là, `/sync` peut retrouver la session :
+- **via le token de session** (`localStorage`) — rafraîchissement de page sur le même appareil ;
+- **via le JWT** issu d'une vérification OTP — reprise sur un autre appareil.
+
+Champs renvoyés (strict minimum) : `reals, filaments, anchored, registered, complexity, clarity, token`.
 
 ---
 
@@ -267,6 +301,12 @@ Si `coherent: false` : pas de save, pas de décrément d'explorations, pas de sw
 
 Chaque étape est autonome et testable. Recommandé : une étape = une session.
 
+> **État réel (le dépôt fait foi, ce tableau est tenu à jour) :**
+> Étapes **0 → 8 faites et déployées**. Ajout hors-roadmap : fonction **`/sync`**
+> (resynchro cross-device). Le flux email de l'Étape 6 a été **remplacé** à
+> l'Étape 8 : plus de lien magique (bug `otp_expired` dû au pré-clic anti-spam),
+> mais un **code OTP 6 chiffres** saisi dans la sphère puis vérifié par `/confirm`.
+
 ### Étape 0 — Fondations (setup + sécurité)
 
 **Livrables :** projet Supabase créé (URL + anon + service_role récupérées) · compte Resend (clé) · clé API Claude · structure de dossiers · `.gitignore` + `.env.example` + `.env.local` · `supabase secrets set …` · `secrets.php` posé hors `public_html`.
@@ -297,20 +337,21 @@ Chaque étape est autonome et testable. Recommandé : une étape = une session.
 **Livrables :** Edge Function `/reals` (ou logique intégrée) · +10 sur la 2e touche · persistance `sessions.reals_total`.
 **Test :** 2e touche → +10 + animation ; le total en DB correspond à l'affichage (hors fluctuation ±5).
 
-### Étape 6 — Compte + Email personnalisé (M6)
+### Étape 6 — Compte + Email personnalisé (M6) ✅ — flux révisé en Étape 8
 
-**Livrables :** Edge Function `/register` (signUp + `generateLink` + Resend custom) · template email (réponse IA + badges complexité/clarté + total REALS + CTA) · `confirm.html` · branchement du formulaire email · email Supabase auto désactivé.
-**Test :** saisir un email → recevoir l'email personnalisé contenant sa réponse Q1 → cliquer le CTA → `confirm.html` OK ; HUD passe `CONNECTÉ AU RÉSEAU`.
+**Livrables :** Edge Function `/register` (`generateLink` + Resend custom) · template email (réponse IA + badges complexité/clarté + total REALS) · branchement du formulaire email · email Supabase auto désactivé.
+**⚠️ Le CTA « lien magique » a été remplacé par un code OTP 6 chiffres (voir Étape 8c).** `/register` envoie désormais `properties.email_otp` au lieu de `action_link`, et ne rattache plus `user_id` (déplacé dans `/confirm`).
+**Test :** saisir un email → recevoir le code à 6 chiffres → le saisir dans la sphère → HUD passe `CONNECTÉ AU RÉSEAU`.
 
-### Étape 7 — QR dynamique + tracking + alerte (M1 + M2)
+### Étape 7 — QR dynamique + tracking + alerte (M1 + M2) ✅
 
-**Livrables :** `go/index.php` (log `scan_events` + alerte Resend + 302 redirect) · `secrets.php` branché · QR code généré pointant sur `yesin.media/go` · (option) page dashboard scans.
+**Livrables :** `go/index.php` (lit `redirects` en clé anon · log `scan_events` avec IP hachée · alerte Resend admin · 302 redirect) · `secrets.php` à placer **hors web root** (`/home/USER/private/secrets.php`, chargé via `require __DIR__.'/../../private/secrets.php'`) · QR code pointant sur `https://yesin.media/go`.
 **Test :** visiter `/go` → atterrissage sur la sphère + ligne dans `scan_events` + email d'alerte reçu.
 
-### Étape 8 — Durcissement & déploiement final
+### Étape 8 — Durcissement & déploiement final ✅
 
-**Livrables :** CORS verrouillé (origine `yesin.media`) · vérif RLS complète · rate limiting basique sur les Edge Functions · upload final sur n0c · test end-to-end mobile.
-**Test :** parcours complet du scan QR jusqu'à l'email reçu, sur mobile réel.
+**Livrables :** CORS verrouillé (origine `yesin.media`, déjà en place dans `cors.ts`) · vérif RLS complète · rate limiting sur **toutes** les Edge Functions (ajout sur `/sync`) · `/sync` & `/confirm` ne renvoient aucune donnée géo sensible · **fix `otp_expired`** (code OTP 6 chiffres + `/confirm`) · test end-to-end mobile.
+**Test :** parcours complet du scan QR jusqu'à la confirmation du compte par code OTP, sur mobile réel.
 
 ---
 
