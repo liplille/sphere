@@ -728,10 +728,13 @@ document
     hideCoherenceError();
     dreamFormView.style.display = "none";
     dreamResponseView.style.display = "block";
+    // Le bouton « Continuer » est caché pendant le chargement —
+    // il ne doit apparaître qu'une fois la réponse affichée.
+    const btnClose = document.getElementById("btn-close-dream");
+    if (btnClose) btnClose.style.display = "none";
     iaResponse.innerHTML =
       '<div class="loader"><div></div><div></div><div></div></div>';
 
-    // Appel mock en Étape 2 ; remplacé par un vrai fetch à l'Étape 3.
     const res = await API.submitIntention(val);
 
     // Erreur serveur/réseau : retour au formulaire avec un message dédié,
@@ -761,6 +764,8 @@ document
       filaments[0].baseColor.setHex(0x00f3ff);
       filaments[0].aliveIdle = true;
     }
+    // Révèle « Continuer l'exploration » maintenant que la réponse est là.
+    if (btnClose) btnClose.style.display = "";
   });
 
 document.getElementById("btn-close-dream").addEventListener("click", () => {
