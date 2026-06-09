@@ -250,42 +250,63 @@ const poleSprites = [];
   p.add(s);
   poleSprites.push(s);
 });
+
 /* ============================================================
          14a. ANCRAGE DEPUIS LE MODAL
          ============================================================ */
 const btnAncrageDream = document.getElementById("btn-ancrage-dream");
 if (btnAncrageDream) {
-  btnAncrageDream.addEventListener("click", function () {
+  btnAncrageDream.addEventListener("click", function (e) {
+    e.preventDefault(); // Empêche un rechargement accidentel de la page
+
     // 1. Changement visuel pour faire patienter l'utilisateur
-    btnAncrageDream.textContent = "RECHERCHE DU SIGNAL...";
+    btnAncrageDream.textContent = "RECHERCHE DE LA POSITION...";
     btnAncrageDream.style.opacity = "0.7";
 
     // 2. Demande des coordonnées au navigateur
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        // Optionnel : Envoi à ton backend via l'API existante si nécessaire
-        // ex: await window.API.saveGeo(pos.coords.latitude, pos.coords.longitude);
+        // 3. VRAI ENVOI AU BACKEND (décommenté)
+        const res = await window.API.saveGeo(
+          pos.coords.latitude,
+          pos.coords.longitude,
+        );
 
-        // 3. Succès : Mise à jour du bouton
-        btnAncrageDream.textContent = "SPHÈRE ANCRÉE";
-        btnAncrageDream.style.opacity = "1";
-        btnAncrageDream.style.backgroundColor = "rgba(255, 204, 85, 0.15)";
-        btnAncrageDream.style.cursor = "default";
-        btnAncrageDream.disabled = true; // Empêche le multi-clic
+        if (res && res.ok) {
+          // 4. Succès serveur : Mise à jour du bouton
+          btnAncrageDream.textContent = "SPHÈRE ANCRÉE";
+          btnAncrageDream.style.opacity = "1";
+          btnAncrageDream.style.backgroundColor = "rgba(255, 204, 85, 0.15)";
+          btnAncrageDream.style.cursor = "default";
+          btnAncrageDream.disabled = true; // Empêche le multi-clic
 
-        // 4. Succès : Déclenchement de tes animations et du HUD existant
-        HUD.setAnchored();
-        if (typeof playWake === "function") playWake();
+          // 5. Mise à jour du HUD
+          HUD.setAnchored();
+
+          // NOUVEAU : On ajoute visuellement la récompense si le serveur l'a validée (10 REALS)
+          if (res.awarded && res.awarded > 0) {
+            HUD.addReals(res.awarded);
+          }
+
+          if (typeof playWake === "function") playWake();
+        } else {
+          // 6. Échec côté serveur (problème réseau)
+          btnAncrageDream.textContent = "ÉCHEC RÉSEAU. RÉESSAYER ?";
+          btnAncrageDream.style.opacity = "1";
+        }
       },
       (err) => {
-        // 5. Erreur ou refus de l'utilisateur
+        // 7. Erreur ou refus de l'utilisateur (GPS désactivé)
         console.warn("Ancrage refusé ou impossible", err);
         btnAncrageDream.textContent = "SIGNAL PERDU. RÉESSAYER ?";
         btnAncrageDream.style.opacity = "1";
       },
+      // NOUVEAU : on force la haute précision pour éviter un échec sur les mobiles capricieux
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   });
 }
+
 /* ============================================================
          8. FILAMENTS
          ============================================================ */
@@ -820,12 +841,8 @@ document
         modalEmail.classList.remove("active");
         isUiBlocking = false;
         appStep = 4;
-        HUD.setOnline();
-        HUD.setState("ASSIMILATION DES INTENTIONS", "#00f3ff"); // NOUVEAU : Remplace "ALLIANCE SCELLÉE"
+        HUD.setOnline(); // setOnline pose son propre texte ("CONNECTÉ AU RÉSEAU")
       }, 2500);
-
-      // ⚠️ ATTENTION : Supprime (ou commente) la ligne ci-dessous pour que le texte reste bien en cyan brillant
-      // setTimeout(() => HUD.setStateColor(""), 10000);
     } else {
       console.warn("[confirm] réponse:", res);
       codeError.textContent =
