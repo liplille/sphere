@@ -778,6 +778,7 @@ document
       setTimeout(() => HUD.setStateColor(""), 10000);
     } else {
       // Code refusé : on laisse l'utilisateur réessayer.
+      console.warn("[confirm] réponse:", res); // diagnostic (à retirer une fois OK)
       codeError.textContent =
         res && res.error === "rate_limited"
           ? "Trop de tentatives. Patiente quelques minutes."

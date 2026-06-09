@@ -6,9 +6,23 @@
 // Remplace l'ancien flux « lien magique » consommé par les anti-spam.
 // ============================================================
 
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleCors, corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/client.ts";
 import { rateLimitByIp } from "../_shared/ratelimit.ts";
+
+// Client à clé ANON/publishable pour les opérations Auth (verifyOtp).
+// verifyOtp NE doit PAS passer par le client service_role (rôle inadapté).
+function authClient() {
+  const url = Deno.env.get("SUPABASE_URL")!;
+  const anon =
+    Deno.env.get("SUPABASE_ANON_KEY") ||
+    Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ||
+    "";
+  return createClient(url, anon, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 Deno.serve(async (req) => {
   const pre = handleCors(req);
@@ -59,10 +73,11 @@ Deno.serve(async (req) => {
     //                  cassé par otp_expired). C'est ce type qui débloque.
     // Un type qui ne correspond pas renvoie une erreur SANS consommer le bon
     // jeton (GoTrue cherche dans la mauvaise colonne), donc l'ordre est sûr.
+    const auth = authClient();
     let user = null;
     const attempts: string[] = [];
     for (const type of ["email", "magiclink", "signup"] as const) {
-      const { data, error } = await supabase.auth.verifyOtp({
+      const { data, error } = await auth.auth.verifyOtp({
         email,
         token: code,
         type,
@@ -75,10 +90,15 @@ Deno.serve(async (req) => {
     }
 
     if (!user) {
-      // Logge la raison exacte (visible via `supabase functions logs confirm`).
+      // Diagnostic : on logge ET on renvoie le détail dans la réponse
+      // (lisible dans la console réseau du navigateur). À retirer une fois OK.
       console.error("verifyOtp échec —", { email, codeLen: code.length, attempts });
       return new Response(
-        JSON.stringify({ ok: false, error: "Code invalide ou expiré" }),
+        JSON.stringify({
+          ok: false,
+          error: "Code invalide ou expiré",
+          debug: attempts,
+        }),
         { status: 401, headers },
       );
     }
