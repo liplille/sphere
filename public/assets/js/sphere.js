@@ -757,6 +757,7 @@ document
     if (res && res.ok) {
       // Alliance scellée : on nettoie l'état d'attente, on synchronise, on passe CONNECTÉ.
       localStorage.removeItem("sphere_pending_email");
+      HUD.setState("ALLIANCE SCELLÉE", "#00f3ff"); // sort de « VÉRIFICATION… »
       window.API.setToken(res.token);
       HUD.setReals(res.reals);
       HUD.setFilaments(res.filaments);
