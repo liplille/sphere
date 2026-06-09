@@ -85,10 +85,41 @@
             placeholder="Ex: Ouvrir un café littéraire..."
             autocomplete="off"
           />
-          <div id="coherence-error" style="display: none; font-size: 11px; color: #ff9a8a; margin-bottom: 14px; line-height: 1.5">
+          <div
+            id="coherence-error"
+            style="
+              display: none;
+              font-size: 11px;
+              color: #ff9a8a;
+              margin-bottom: 14px;
+              line-height: 1.5;
+            "
+          >
             La sphère n'a pas capté d'intention réelle… Parle-nous de ce que tu
             veux vraiment créer.
           </div>
+          <button
+            id="btn-ancrage-dream"
+            style="
+              width: 100%;
+              padding: 14px 28px;
+              margin-bottom: 15px;
+              background-color: transparent;
+              color: #ffcc55;
+              font-weight: bold;
+              border: 1px solid #ffcc55;
+              border-radius: 4px;
+              font-size: 15px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            "
+            onmouseover="this.style.backgroundColor = 'rgba(255, 204, 85, 0.1)'"
+            onmouseout="this.style.backgroundColor = 'transparent'"
+          >
+            Ancrer la sphère
+          </button>
           <button id="btn-submit-dream" class="btn-submit">
             Confier à la sphère
           </button>

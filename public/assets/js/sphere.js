@@ -250,7 +250,42 @@ const poleSprites = [];
   p.add(s);
   poleSprites.push(s);
 });
+/* ============================================================
+         14a. ANCRAGE DEPUIS LE MODAL
+         ============================================================ */
+const btnAncrageDream = document.getElementById("btn-ancrage-dream");
+if (btnAncrageDream) {
+  btnAncrageDream.addEventListener("click", function () {
+    // 1. Changement visuel pour faire patienter l'utilisateur
+    btnAncrageDream.textContent = "RECHERCHE DU SIGNAL...";
+    btnAncrageDream.style.opacity = "0.7";
 
+    // 2. Demande des coordonnées au navigateur
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        // Optionnel : Envoi à ton backend via l'API existante si nécessaire
+        // ex: await window.API.saveGeo(pos.coords.latitude, pos.coords.longitude);
+
+        // 3. Succès : Mise à jour du bouton
+        btnAncrageDream.textContent = "SPHÈRE ANCRÉE";
+        btnAncrageDream.style.opacity = "1";
+        btnAncrageDream.style.backgroundColor = "rgba(255, 204, 85, 0.15)";
+        btnAncrageDream.style.cursor = "default";
+        btnAncrageDream.disabled = true; // Empêche le multi-clic
+
+        // 4. Succès : Déclenchement de tes animations et du HUD existant
+        HUD.setAnchored();
+        if (typeof playWake === "function") playWake();
+      },
+      (err) => {
+        // 5. Erreur ou refus de l'utilisateur
+        console.warn("Ancrage refusé ou impossible", err);
+        btnAncrageDream.textContent = "SIGNAL PERDU. RÉESSAYER ?";
+        btnAncrageDream.style.opacity = "1";
+      },
+    );
+  });
+}
 /* ============================================================
          8. FILAMENTS
          ============================================================ */
