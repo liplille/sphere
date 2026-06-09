@@ -74,21 +74,23 @@ window.HUD = (function () {
   }
 
   // Ancrage cliquable à tout moment : position HAUTE PRÉCISION envoyée au backend.
-  // Ancrage cliquable à tout moment : position HAUTE PRÉCISION envoyée au backend.
   function initAncrage(onAnchor) {
     if (!elLocation) return;
     const trigger = elLocation.closest(".hud-data") || elLocation;
     trigger.style.pointerEvents = "auto";
     trigger.style.cursor = "pointer";
     trigger.title = "Ancrer ta sphère";
+
     trigger.addEventListener("click", () => {
       if (!("geolocation" in navigator)) return;
+
       elLocation.innerText = "DÉTECTION…";
+
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           const { latitude, longitude } = pos.coords;
 
-          // 1. On attend le retour de l'API avant de donner la récompense
+          // On attend le retour de l'API avant de donner la récompense
           let success = false;
           try {
             if (window.API && window.API.saveGeo) {
@@ -99,7 +101,7 @@ window.HUD = (function () {
             console.error("Erreur saveGeo:", e);
           }
 
-          // 2. Si le backend a validé l'enregistrement
+          // Si le backend a validé l'enregistrement
           if (success) {
             elLocation.innerText = "ANCRÉ";
             elLocation.style.color = "#00f3ff";
@@ -109,7 +111,7 @@ window.HUD = (function () {
               if (typeof onAnchor === "function") onAnchor();
             }
           } else {
-            // 3. En cas d'échec du backend
+            // En cas d'échec du backend
             elLocation.innerText = "ÉCHEC RÉSEAU";
             setTimeout(() => {
               elLocation.innerText = "LIBRE";
@@ -117,8 +119,9 @@ window.HUD = (function () {
           }
         },
         () => {
+          // Refus de la localisation par l'utilisateur ou erreur GPS
           elLocation.innerText = "LIBRE";
-        }, // refus de localisation
+        },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
       );
     });
