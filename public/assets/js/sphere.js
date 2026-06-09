@@ -56,6 +56,13 @@ async function bootSync() {
   const hash = window.location.hash;
   let jwt = null;
 
+  // NOUVEAU : Récupération du token d'origine depuis le lien
+  const params = new URLSearchParams(window.location.search);
+  const tokenFromLink = params.get("t");
+  if (tokenFromLink) {
+    window.API.setToken(tokenFromLink);
+  }
+
   // Si on vient de cliquer sur le lien de l'email
   if (hash.includes("access_token=")) {
     const params = new URLSearchParams(hash.substring(1));
@@ -778,12 +785,14 @@ document
       }, 2500);
       setTimeout(() => HUD.setStateColor(""), 10000);
     } else {
-      // Code refusé : on laisse l'utilisateur réessayer.
-      console.warn("[confirm] réponse:", res); // diagnostic (à retirer une fois OK)
+      console.warn("[confirm] réponse:", res);
       codeError.textContent =
         res && res.error === "rate_limited"
           ? "Trop de tentatives. Patiente quelques minutes."
-          : "Code invalide ou expiré. Réessaie.";
+          : res && res.error === "Session introuvable"
+            ? "Session perdue. Copie ce code dans ton onglet d'origine."
+            : "Code invalide ou expiré. Réessaie.";
+
       HUD.setState("EN ATTENTE DU CODE...", "#ffcc55");
     }
   });
@@ -798,7 +807,8 @@ function resumePendingConfirmation() {
   const params = new URLSearchParams(window.location.search);
   const fromLink = params.get("confirm");
   const stored = localStorage.getItem("sphere_pending_email");
-  const email = (fromLink && fromLink.includes("@") ? fromLink : null) || stored;
+  const email =
+    (fromLink && fromLink.includes("@") ? fromLink : null) || stored;
 
   if (!email) return;
 

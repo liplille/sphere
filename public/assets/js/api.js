@@ -131,9 +131,18 @@ window.API = {
       const res = await fetch(window.FN_BASE + "/confirm", {
         method: "POST",
         headers: fnHeaders(),
-        body: JSON.stringify({ token: SESSION_TOKEN, email: email, code: code }),
+        body: JSON.stringify({
+          token: SESSION_TOKEN,
+          email: email,
+          code: code,
+        }),
       });
-      if (!res.ok && res.status !== 401 && res.status !== 400) {
+      if (
+        !res.ok &&
+        res.status !== 401 &&
+        res.status !== 400 &&
+        res.status !== 404
+      ) {
         console.error("Erreur HTTP /confirm:", res.status);
         return { ok: false };
       }

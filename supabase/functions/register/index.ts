@@ -113,8 +113,7 @@ Deno.serve(async (req) => {
         <div style="display: inline-block; padding: 18px 32px; background-color: #1a1a1a; border: 1px solid #00f3ff; border-radius: 8px; font-size: 34px; font-weight: bold; letter-spacing: 8px; color: #00f3ff; font-family: monospace;">${emailOtp}</div>
 
         <p style="color: #aaa; margin-top: 28px; margin-bottom: 10px;">Tu as fermé la page ? Reviens saisir ton code :</p>
-        <a href="https://yesin.media/?confirm=${encodeURIComponent(email)}" style="display: inline-block; padding: 14px 28px; background-color: transparent; color: #00f3ff; text-decoration: none; font-weight: bold; border: 1px solid #00f3ff; border-radius: 4px; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">Revenir à ma sphère</a>
-
+<a href="https://yesin.media/?confirm=${encodeURIComponent(email)}&t=${token}" style="display: inline-block; padding: 14px 28px; background-color: transparent; color: #00f3ff; text-decoration: none; font-weight: bold; border: 1px solid #00f3ff; border-radius: 4px; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">Revenir à ma sphère</a>
         <p style="color: #666; font-size: 13px; margin-top: 24px;">Ce code expire dans 1 heure. Si tu n'es pas à l'origine de cette demande, ignore cet email.</p>
       </div>
     `;
