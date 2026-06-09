@@ -98,7 +98,9 @@ async function bootSync() {
   }
 }
 
-bootSync(); // Lancement immédiat au chargement de la page
+// Lancement immédiat au chargement, puis reprise éventuelle d'une
+// confirmation OTP en attente (si l'utilisateur avait fermé la page).
+bootSync().then(resumePendingConfirmation);
 /* ============================================================
          4. MOTEUR 3D (scène, caméra, rendu, contrôles)
          ============================================================ */
@@ -695,19 +697,14 @@ document
 
     HUD.setState("PERSONNALISATION...", "#ffcc55"); // S'allume en Or
 
-    // 🚨 L'APPEL AU SERVEUR EST ICI 🚨 (envoi du code 6 chiffres par email)
+    // 🚨 L'APPEL AU SERVEUR EST ICI 🚨 (envoi du code OTP par email)
     const res = await window.API.registerAccount(emailVal);
 
     if (res && res.ok) {
-      // Le code est parti : on bascule sur la saisie du code OTP.
-      pendingEmail = emailVal;
-      emailSuccessView.style.display = "none";
-      emailCodeView.style.display = "block";
-      HUD.setState("EN ATTENTE DU CODE...", "#ffcc55");
-      setTimeout(() => {
-        const ci = document.getElementById("code-input");
-        if (ci) ci.focus();
-      }, 100);
+      // Le code est parti : on persiste l'email (reprise si la page est fermée)
+      // et on bascule sur la saisie du code OTP.
+      localStorage.setItem("sphere_pending_email", emailVal);
+      showCodeEntry(emailVal);
     } else {
       // ÉCHEC DU SERVEUR
       emailSuccessView.innerHTML =
@@ -727,12 +724,29 @@ const emailCodeView = document.getElementById("email-code-view");
 const codeInput = document.getElementById("code-input");
 const codeError = document.getElementById("code-error");
 
+// Ouvre la modal directement sur la vue « saisie du code » (depuis le submit
+// email OU au rechargement de page si une confirmation est en attente).
+function showCodeEntry(email) {
+  pendingEmail = email;
+  modalEmail.classList.add("active");
+  isUiBlocking = true;
+  appStep = 3;
+  emailFormView.style.display = "none";
+  emailSuccessView.style.display = "none";
+  emailCodeView.style.display = "block";
+  if (codeError) codeError.textContent = "";
+  HUD.setState("EN ATTENTE DU CODE...", "#ffcc55");
+  setTimeout(() => {
+    if (codeInput) codeInput.focus();
+  }, 100);
+}
+
 document
   .getElementById("btn-submit-code")
   .addEventListener("click", async () => {
     const code = (codeInput.value || "").replace(/\D/g, "");
-    if (code.length !== 6) {
-      codeError.textContent = "Le code comporte 6 chiffres.";
+    if (code.length < 6 || code.length > 8) {
+      codeError.textContent = "Le code comporte 6 à 8 chiffres.";
       return;
     }
     codeError.textContent = "";
@@ -741,7 +755,8 @@ document
     const res = await window.API.confirmCode(pendingEmail, code);
 
     if (res && res.ok) {
-      // Alliance scellée : on synchronise l'état et on passe CONNECTÉ.
+      // Alliance scellée : on nettoie l'état d'attente, on synchronise, on passe CONNECTÉ.
+      localStorage.removeItem("sphere_pending_email");
       window.API.setToken(res.token);
       HUD.setReals(res.reals);
       HUD.setFilaments(res.filaments);
@@ -770,6 +785,28 @@ document
       HUD.setState("EN ATTENTE DU CODE...", "#ffcc55");
     }
   });
+
+// Reprise d'une confirmation en attente au chargement de la page :
+//  - lien email « Revenir à ma sphère » → ?confirm=<email> (cross-device)
+//  - sinon, email mémorisé en localStorage (même appareil, onglet fermé)
+// On n'affiche le champ code QUE si l'utilisateur n'est pas déjà connecté.
+function resumePendingConfirmation() {
+  if (appStep === 4) return; // déjà connecté (bootSync l'a établi)
+
+  const params = new URLSearchParams(window.location.search);
+  const fromLink = params.get("confirm");
+  const stored = localStorage.getItem("sphere_pending_email");
+  const email = (fromLink && fromLink.includes("@") ? fromLink : null) || stored;
+
+  if (!email) return;
+
+  localStorage.setItem("sphere_pending_email", email);
+  if (fromLink) {
+    // Nettoie l'URL (évite de laisser l'email dans l'historique / au partage)
+    window.history.replaceState(null, null, window.location.pathname);
+  }
+  setTimeout(() => showCodeEntry(email), 600);
+}
 
 /* ============================================================
          14b. AIDES FORMULAIRE (cohérence / erreur)

@@ -305,7 +305,8 @@ Chaque étape est autonome et testable. Recommandé : une étape = une session.
 > Étapes **0 → 8 faites et déployées**. Ajout hors-roadmap : fonction **`/sync`**
 > (resynchro cross-device). Le flux email de l'Étape 6 a été **remplacé** à
 > l'Étape 8 : plus de lien magique (bug `otp_expired` dû au pré-clic anti-spam),
-> mais un **code OTP 6 chiffres** saisi dans la sphère puis vérifié par `/confirm`.
+> mais un **code OTP (6 à 8 chiffres selon la config Auth)** saisi dans la sphère
+> puis vérifié par `/confirm`.
 
 ### Étape 0 — Fondations (setup + sécurité)
 
@@ -340,8 +341,8 @@ Chaque étape est autonome et testable. Recommandé : une étape = une session.
 ### Étape 6 — Compte + Email personnalisé (M6) ✅ — flux révisé en Étape 8
 
 **Livrables :** Edge Function `/register` (`generateLink` + Resend custom) · template email (réponse IA + badges complexité/clarté + total REALS) · branchement du formulaire email · email Supabase auto désactivé.
-**⚠️ Le CTA « lien magique » a été remplacé par un code OTP 6 chiffres (voir Étape 8c).** `/register` envoie désormais `properties.email_otp` au lieu de `action_link`, et ne rattache plus `user_id` (déplacé dans `/confirm`).
-**Test :** saisir un email → recevoir le code à 6 chiffres → le saisir dans la sphère → HUD passe `CONNECTÉ AU RÉSEAU`.
+**⚠️ Le CTA « lien magique » a été remplacé par un code OTP (voir Étape 8c).** `/register` envoie désormais `properties.email_otp` au lieu de `action_link`, et ne rattache plus `user_id` (déplacé dans `/confirm`). L'email contient aussi un lien `?confirm=<email>` pour reprendre la saisie si la page a été fermée.
+**Test :** saisir un email → recevoir le code → le saisir dans la sphère → HUD passe `CONNECTÉ AU RÉSEAU`.
 
 ### Étape 7 — QR dynamique + tracking + alerte (M1 + M2) ✅
 
@@ -350,7 +351,7 @@ Chaque étape est autonome et testable. Recommandé : une étape = une session.
 
 ### Étape 8 — Durcissement & déploiement final ✅
 
-**Livrables :** CORS verrouillé (origine `yesin.media`, déjà en place dans `cors.ts`) · vérif RLS complète · rate limiting sur **toutes** les Edge Functions (ajout sur `/sync`) · `/sync` & `/confirm` ne renvoient aucune donnée géo sensible · **fix `otp_expired`** (code OTP 6 chiffres + `/confirm`) · test end-to-end mobile.
+**Livrables :** CORS verrouillé (origine `yesin.media`, déjà en place dans `cors.ts`) · vérif RLS complète · rate limiting sur **toutes** les Edge Functions (ajout sur `/sync`) · `/sync` & `/confirm` ne renvoient aucune donnée géo sensible · **fix `otp_expired`** (code OTP + `/confirm` + reprise via lien email/localStorage) · test end-to-end mobile.
 **Test :** parcours complet du scan QR jusqu'à la confirmation du compte par code OTP, sur mobile réel.
 
 ---
