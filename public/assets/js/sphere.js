@@ -56,7 +56,6 @@ async function bootSync() {
   const hash = window.location.hash;
   let jwt = null;
 
-  // NOUVEAU : Récupération du token d'origine depuis le lien
   const params = new URLSearchParams(window.location.search);
   const tokenFromLink = params.get("t");
   if (tokenFromLink) {
@@ -790,7 +789,7 @@ document
         res && res.error === "rate_limited"
           ? "Trop de tentatives. Patiente quelques minutes."
           : res && res.error === "Session introuvable"
-            ? "Session perdue. Copie ce code dans ton onglet d'origine."
+            ? "Session perdue. Utilise le lien de retour présent dans l'email."
             : "Code invalide ou expiré. Réessaie.";
 
       HUD.setState("EN ATTENTE DU CODE...", "#ffcc55");
