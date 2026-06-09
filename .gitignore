@@ -1,0 +1,19 @@
+# Secrets & environnement
+.env
+.env.local
+.env.*.local
+
+# Secrets PHP (hors web root de toute façon, mais par sécurité)
+secrets.php
+private/
+
+# Dépendances
+node_modules/
+
+# Supabase (généré localement)
+supabase/.branches/
+supabase/.temp/
+
+# OS
+.DS_Store
+Thumbs.db

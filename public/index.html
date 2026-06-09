@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>YESIN.MEDIA — Sphere</title>
+    <link rel="stylesheet" href="/assets/css/sphere.css" />
+  </head>
+  <body>
+    <div class="glow" id="glow"></div>
+
+    <!-- HUD : Coins de l'écran -->
+    <div class="hud-corner top-left">
+      <div class="brand">
+        SPHERE <span class="hud-data">// MÉDIA D'INTENTION</span>
+      </div>
+      <!-- Dans la section .top-left -->
+      <div class="hud-data">
+        ANCRAGE : <span class="highlight" id="hud-location">LIBRE</span>
+      </div>
+      <div class="hud-data">
+        CYCLE : <span class="highlight">ÉVEIL_1.0.1</span>
+      </div>
+    </div>
+
+    <div class="hud-corner top-right">
+      <div class="hud-data">
+        <span class="status-dot offline" id="network-dot"></span>
+        <span id="network-text" style="color: rgba(255, 68, 68, 0.7)"
+          >DÉCONNECTÉ</span
+        >
+      </div>
+
+      <div class="hud-data">
+        ÉTAT : <span class="highlight" id="hud-state">ÉCOUTE ACTIVE</span>
+      </div>
+      <div class="hud-data">
+        MESSAGERIE : <span class="highlight" id="hud-messaging">INACTIVE</span>
+      </div>
+    </div>
+
+    <div class="hud-corner bottom-left">
+      <div class="hud-data">
+        MATÉRIALISATION :
+        <span class="highlight" id="hud-potential">12 REALS</span>
+      </div>
+      <div class="hud-data">
+        EXPLORATIONS RESTANTES :
+        <span class="highlight" id="explore-count">3</span>
+      </div>
+    </div>
+
+    <div class="hud-corner bottom-right">
+      <div class="hud-data">
+        MÉMOIRE : <span class="highlight" id="hud-filaments">0 FILAMENT</span>
+      </div>
+      <div class="hud-data">
+        COMPLEXITÉ :
+        <span class="highlight" id="hud-complexity">EN ATTENTE</span>
+      </div>
+      <div class="hud-data">
+        CLARTÉ :
+        <span class="highlight" id="hud-clarity">EN ATTENTE</span>
+      </div>
+    </div>
+
+    <!-- HUD : Centre Action -->
+    <div class="interaction-zone" id="intro-ui">
+      <div class="instruction-text">Touche la sphère. Vois ce qui en sort.</div>
+    </div>
+
+    <!-- Interface Modals & Formulaires -->
+    <div class="ui-container">
+      <!-- Modal Rêve -->
+      <div class="glass-modal ui-element" id="modal-dream">
+        <div id="dream-form-view">
+          <h2>Qu'est-ce que tu veux réaliser ?</h2>
+          <input
+            type="text"
+            id="dream-input"
+            class="input-field"
+            placeholder="Ex: Ouvrir un café littéraire..."
+            autocomplete="off"
+          />
+          <div id="coherence-error" style="display: none; font-size: 11px; color: #ff9a8a; margin-bottom: 14px; line-height: 1.5">
+            La sphère n'a pas capté d'intention réelle… Parle-nous de ce que tu
+            veux vraiment créer.
+          </div>
+          <button id="btn-submit-dream" class="btn-submit">
+            Confier à la sphère
+          </button>
+        </div>
+        <div id="dream-response-view" style="display: none">
+          <div class="response-area" id="ia-response"></div>
+          <button id="btn-close-dream" class="btn-submit">
+            Continuer l'exploration
+          </button>
+        </div>
+      </div>
+
+      <!-- Toast Exploration -->
+      <div class="toast" id="toast-exploration">
+        Exploration initiée. Nous te préviendrons dès que les premiers résultats
+        apparaîtront.
+      </div>
+
+      <!-- Modal Email -->
+      <div class="glass-modal ui-element" id="modal-email">
+        <div id="email-form-view">
+          <h2>
+            Ton rêve prend forme. Laisse ton email pour sauvegarder ta sphère et
+            suivre notre progression :
+          </h2>
+          <input
+            type="email"
+            id="email-input"
+            class="input-field"
+            placeholder="ton@email.com"
+            autocomplete="off"
+          />
+          <button id="btn-submit-email" class="btn-submit">
+            Sauvegarder ma sphère
+          </button>
+        </div>
+        <div id="email-success-view" style="display: none">
+          <h2 style="margin-bottom: 0">
+            La sphère va se personnaliser, reviens plus tard.
+          </h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Librairies 3D -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <!-- Config publique + couches applicatives (mocks en Étape 2) -->
+    <script src="/assets/js/config.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/hud.js"></script>
+
+    <!-- Moteur principal (module : importe Three.js via l'importmap) -->
+    <script type="module" src="/assets/js/sphere.js"></script>
+  </body>
+</html>

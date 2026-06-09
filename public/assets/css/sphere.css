@@ -1,0 +1,363 @@
+      /* ============================================================
+         BASE & FOND
+         ============================================================ */
+      body {
+        margin: 0;
+        background: radial-gradient(ellipse at center, #0a0805 0%, #020308 70%);
+        color: white;
+        font-family: "Inter", sans-serif;
+        overflow: hidden;
+        touch-action: none;
+      }
+
+      /* Halo lumineux central, respire avec la sphère */
+      .glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 70vmin;
+        height: 70vmin;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(
+          circle,
+          rgba(255, 190, 70, 0.12) 0%,
+          rgba(255, 150, 40, 0.05) 35%,
+          transparent 65%
+        );
+        pointer-events: none;
+        z-index: 0;
+        will-change: opacity, transform;
+      }
+
+      /* ============================================================
+         INTERFACE (UI) — MODALS, FORMULAIRES, TOAST
+         ============================================================ */
+      .ui-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 50;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-sizing: border-box;
+      }
+
+      .ui-element {
+        pointer-events: auto;
+      }
+
+      /* Modals (Fenêtres) */
+      .glass-modal {
+        background: rgba(10, 8, 5, 0.75);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 30px;
+        width: 320px;
+        max-width: 85%;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        text-align: center;
+        opacity: 0;
+        transform: scale(0.9) translateY(10px);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        display: none;
+      }
+      .glass-modal.active {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        display: block;
+      }
+
+      .glass-modal h2 {
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 0;
+        margin-bottom: 20px;
+        line-height: 1.4;
+        letter-spacing: 0.5px;
+      }
+
+      .input-field {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        padding: 14px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 15px;
+        font-family: "Inter", sans-serif;
+        font-size: 13px;
+        transition: border-color 0.3s;
+      }
+      .input-field:focus {
+        outline: none;
+        border-color: rgba(255, 190, 70, 0.5);
+      }
+
+      .btn-submit {
+        background: #ffffff;
+        color: #000000;
+        border: none;
+        padding: 14px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        width: 100%;
+        transition:
+          background 0.2s,
+          transform 0.1s;
+      }
+      .btn-submit:active {
+        transform: scale(0.98);
+      }
+
+      /* Zone de réponse IA */
+      .response-area {
+        font-size: 13px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.85);
+        text-align: left;
+        margin-bottom: 20px;
+        min-height: 60px;
+      }
+      .loader {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        height: 40px;
+      }
+      .loader div {
+        width: 6px;
+        height: 6px;
+        background: rgba(255, 190, 70, 0.7);
+        border-radius: 50%;
+        animation: bounce 0.6s infinite alternate;
+      }
+      .loader div:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .loader div:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes bounce {
+        to {
+          transform: translateY(-6px);
+          opacity: 0.3;
+        }
+      }
+
+      /* Notification Toast */
+      .toast {
+        position: absolute;
+        bottom: 15%;
+        background: rgba(10, 8, 5, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-size: 12px;
+        line-height: 1.5;
+        text-align: center;
+        max-width: 80%;
+        width: 280px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+      }
+      .toast.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* ============================================================
+         HUD — INTERFACE MINIMALISTE (coins d'écran + zone centrale)
+         ============================================================ */
+      .hud-corner {
+        position: absolute;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        pointer-events: none;
+      }
+
+      .top-left {
+        top: 30px;
+        left: 30px;
+      }
+      .top-right {
+        top: 30px;
+        right: 30px;
+        align-items: flex-end;
+        text-align: right;
+      }
+      .bottom-left {
+        bottom: 30px;
+        left: 30px;
+      }
+      .bottom-right {
+        bottom: 30px;
+        right: 30px;
+        align-items: flex-end;
+        text-align: right;
+      }
+
+      .brand {
+        font-weight: 800;
+        letter-spacing: 4px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 2px;
+      }
+
+      .hud-data {
+        font-weight: 400;
+        letter-spacing: 2px;
+        font-size: 9px;
+        color: rgba(255, 255, 255, 0.3);
+        text-transform: uppercase;
+        transition: color 0.3s ease;
+      }
+
+      .hud-data .highlight {
+        color: rgba(255, 255, 255, 0.7);
+        transition: color 0.3s ease;
+      }
+
+      .status-dot {
+        display: inline-block;
+        width: 5px;
+        height: 5px;
+        background-color: #00f3ff;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #00f3ff;
+        margin-right: 4px;
+        vertical-align: middle;
+        animation: pulse-dot 2s infinite;
+      }
+      /* Classe à ajouter via JS pour passer le point en rouge (Déconnecté) */
+      .status-dot.offline {
+        background-color: #ff4444;
+        box-shadow: 0 0 8px #ff4444;
+        animation: pulse-dot-offline 2s infinite;
+      }
+
+      @keyframes pulse-dot-offline {
+        0%,
+        100% {
+          opacity: 0.4;
+          box-shadow: 0 0 4px #ff4444;
+        }
+        50% {
+          opacity: 1;
+          box-shadow: 0 0 12px #ff4444;
+        }
+      }
+
+      @keyframes pulse-dot {
+        0%,
+        100% {
+          opacity: 0.4;
+          box-shadow: 0 0 4px #00f3ff;
+        }
+        50% {
+          opacity: 1;
+          box-shadow: 0 0 12px #00f3ff;
+        }
+      }
+
+      /* Zone d'interaction centrale */
+      .interaction-zone {
+        position: absolute;
+        bottom: 12%;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        z-index: 100;
+        pointer-events: none;
+        transition: opacity 0.8s ease;
+      }
+
+      .instruction-text {
+        font-size: 11px;
+        font-weight: 400;
+        letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.8);
+        text-transform: uppercase;
+        background: rgba(10, 8, 5, 0.4);
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(5px);
+      }
+
+      /* ============================================================
+         RESPONSIVE — petits écrans
+         ============================================================ */
+      @media (max-width: 768px) {
+        .top-left {
+          top: 15px;
+          left: 15px;
+        }
+        .top-right {
+          top: 15px;
+          right: 15px;
+        }
+        .bottom-left {
+          bottom: 15px;
+          left: 15px;
+        }
+        .bottom-right {
+          bottom: 15px;
+          right: 15px;
+        }
+
+        .brand {
+          font-size: 11px;
+        }
+        .hud-data {
+          font-size: 7px;
+        }
+
+        .interaction-zone {
+          bottom: 20%;
+          width: 90%;
+        }
+      }
+
+      /* ============================================================
+         ANIMATION DE RÉCOMPENSE (REALS)
+         ============================================================ */
+      @keyframes reward-pulse {
+        0% {
+          transform: scale(1);
+          text-shadow: 0 0 0px #ffcc55;
+        }
+        50% {
+          transform: scale(1.4);
+          text-shadow: 0 0 15px #ffcc55;
+        }
+        100% {
+          transform: scale(1);
+          text-shadow: 0 0 5px #ffcc55;
+        }
+      }
+
+      .reward-anim {
+        animation: reward-pulse 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        display: inline-block;
+        color: #ffcc55 !important;
+      }
