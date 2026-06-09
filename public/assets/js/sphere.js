@@ -89,7 +89,10 @@ async function bootSync() {
       appStep = 4; // L'UI bloque la demande d'email
       introUi.style.opacity = "0";
       exploreCount.innerText = "0"; // <-- CORRECTION : Cache les 3 explorations
-      setTimeout(() => HUD.setOnline(), 200);
+      setTimeout(() => {
+        HUD.setOnline();
+        HUD.setState("ASSIMILATION DES INTENTIONS", "#00f3ff"); // NOUVEAU : Met à jour l'état au lieu de "ÉCOUTE ACTIVE"
+      }, 200);
 
       // Petit toast de bienvenue si on arrive PILE via un lien email valide
       if (jwt) {
@@ -783,8 +786,11 @@ document
         isUiBlocking = false;
         appStep = 4;
         HUD.setOnline();
+        HUD.setState("ASSIMILATION DES INTENTIONS", "#00f3ff"); // NOUVEAU : Remplace "ALLIANCE SCELLÉE"
       }, 2500);
-      setTimeout(() => HUD.setStateColor(""), 10000);
+
+      // ⚠️ ATTENTION : Supprime (ou commente) la ligne ci-dessous pour que le texte reste bien en cyan brillant
+      // setTimeout(() => HUD.setStateColor(""), 10000);
     } else {
       console.warn("[confirm] réponse:", res);
       codeError.textContent =
