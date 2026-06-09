@@ -84,15 +84,17 @@ window.HUD = (function () {
     if (elLocation) {
       elLocation.innerText = "ANCRÉ";
       elLocation.style.color = "#00f3ff";
+      // Retire l'indice cliquable : l'ancrage est définitif
+      const trigger = elLocation.closest(".hud-data") || elLocation;
+      trigger.classList.remove("hud-ancrable");
     }
   }
   // Ancrage cliquable à tout moment : position HAUTE PRÉCISION envoyée au backend.
   function initAncrage(onAnchor) {
     if (!elLocation) return;
     const trigger = elLocation.closest(".hud-data") || elLocation;
-    trigger.style.pointerEvents = "auto";
-    trigger.style.cursor = "pointer";
-    trigger.title = "Ancrer ta sphère";
+    trigger.classList.add("hud-ancrable"); // indice visuel + cursor via CSS
+    trigger.title = "Ancrer ta sphère (+10 REALS)";
 
     trigger.addEventListener("click", () => {
       if (!("geolocation" in navigator)) return;

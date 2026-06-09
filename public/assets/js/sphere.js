@@ -257,11 +257,13 @@ const poleSprites = [];
 const btnAncrageDream = document.getElementById("btn-ancrage-dream");
 if (btnAncrageDream) {
   btnAncrageDream.addEventListener("click", function (e) {
-    e.preventDefault(); // Empêche un rechargement accidentel de la page
+    e.preventDefault();
 
-    // 1. Changement visuel pour faire patienter l'utilisateur
+    // Désactivé immédiatement pour bloquer les re-clics et éviter toute
+    // interférence avec « Confier à la sphère » pendant le dialog GPS natif.
+    btnAncrageDream.disabled = true;
     btnAncrageDream.textContent = "RECHERCHE DE LA POSITION...";
-    btnAncrageDream.style.opacity = "0.7";
+    btnAncrageDream.style.opacity = "0.5";
 
     // 2. Demande des coordonnées au navigateur
     navigator.geolocation.getCurrentPosition(
@@ -290,16 +292,18 @@ if (btnAncrageDream) {
 
           if (typeof playWake === "function") playWake();
         } else {
-          // 6. Échec côté serveur (problème réseau)
+          // Échec serveur : on re-active pour permettre un retry
           btnAncrageDream.textContent = "ÉCHEC RÉSEAU. RÉESSAYER ?";
           btnAncrageDream.style.opacity = "1";
+          btnAncrageDream.disabled = false;
         }
       },
       (err) => {
-        // 7. Erreur ou refus de l'utilisateur (GPS désactivé)
+        // Refus ou erreur GPS : on re-active pour permettre un retry
         console.warn("Ancrage refusé ou impossible", err);
         btnAncrageDream.textContent = "SIGNAL PERDU. RÉESSAYER ?";
         btnAncrageDream.style.opacity = "1";
+        btnAncrageDream.disabled = false;
       },
       // NOUVEAU : on force la haute précision pour éviter un échec sur les mobiles capricieux
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },

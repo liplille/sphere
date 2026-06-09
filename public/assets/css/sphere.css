@@ -237,6 +237,20 @@
         transition: color 0.3s ease;
       }
 
+      /* Ligne HUD cliquable (POSITION : LIBRE) — indice visuel permanent */
+      .hud-data.hud-ancrable {
+        cursor: pointer;
+      }
+      .hud-data.hud-ancrable .highlight {
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.35);
+        padding-bottom: 1px;
+        transition: color 0.2s ease, border-color 0.2s ease;
+      }
+      .hud-data.hud-ancrable:hover .highlight {
+        color: #00f3ff;
+        border-color: rgba(0, 243, 255, 0.6);
+      }
+
       .status-dot {
         display: inline-block;
         width: 5px;
