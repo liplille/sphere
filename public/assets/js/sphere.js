@@ -737,6 +737,7 @@ function showCodeEntry(email) {
   modalEmail.classList.add("active");
   isUiBlocking = true;
   appStep = 3;
+  if (exploreCount) exploreCount.innerText = "0";
   emailFormView.style.display = "none";
   emailSuccessView.style.display = "none";
   emailCodeView.style.display = "block";
