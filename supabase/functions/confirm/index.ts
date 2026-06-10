@@ -53,9 +53,7 @@ Deno.serve(async (req) => {
     const email: string | undefined = body.email;
     const code: string = String(body.code || "").trim();
 
-    // Le projet Supabase peut émettre des codes de 6 à 8 chiffres selon la
-    // config Auth (otp_length). On accepte la plage au lieu d'imposer 6.
-    if (!token || !email || !email.includes("@") || !/^\d{6,8}$/.test(code)) {
+    if (!token || !email || !email.includes("@") || !/^\d{6}$/.test(code)) {
       return new Response(JSON.stringify({ ok: false, error: "Entrée invalide" }), {
         status: 400,
         headers,

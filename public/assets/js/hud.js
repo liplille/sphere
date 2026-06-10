@@ -84,9 +84,10 @@ window.HUD = (function () {
     if (elLocation) {
       elLocation.innerText = "ANCRÉ";
       elLocation.style.color = "#00f3ff";
-      // Retire l'indice cliquable : l'ancrage est définitif
       const trigger = elLocation.closest(".hud-data") || elLocation;
       trigger.classList.remove("hud-ancrable");
+      trigger.classList.add("hud-ancre"); // reste cliquable pour actualiser la position
+      trigger.title = "Actualiser ta position";
     }
   }
   // Ancrage cliquable à tout moment : position HAUTE PRÉCISION envoyée au backend.
@@ -94,18 +95,19 @@ window.HUD = (function () {
     if (!elLocation) return;
     const trigger = elLocation.closest(".hud-data") || elLocation;
     trigger.classList.add("hud-ancrable"); // indice visuel + cursor via CSS
-    trigger.title = "Ancrer ta sphère (+10 REALS)";
+    trigger.title = anchored ? "Actualiser ta position" : "Ancrer Sphère (+10 REALS)";
 
     trigger.addEventListener("click", () => {
       if (!("geolocation" in navigator)) return;
+      if (elLocation.innerText === "DÉTECTION…") return; // déjà en cours
 
       elLocation.innerText = "DÉTECTION…";
+      elLocation.style.color = "";
 
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           const { latitude, longitude } = pos.coords;
 
-          // On attend le retour de l'API avant de donner la récompense
           let success = false;
           try {
             if (window.API && window.API.saveGeo) {
@@ -116,26 +118,25 @@ window.HUD = (function () {
             console.error("Erreur saveGeo:", e);
           }
 
-          // Si le backend a validé l'enregistrement
           if (success) {
             elLocation.innerText = "ANCRÉ";
             elLocation.style.color = "#00f3ff";
             if (!anchored) {
               anchored = true;
-              addReals(10); // +10 REALS uniquement si succès DB
+              addReals(10);
               if (typeof onAnchor === "function") onAnchor();
             }
+            // Toujours marquer comme re-ancrable après succès
+            trigger.classList.remove("hud-ancrable");
+            trigger.classList.add("hud-ancre");
           } else {
-            // En cas d'échec du backend
-            elLocation.innerText = "ÉCHEC RÉSEAU";
-            setTimeout(() => {
-              elLocation.innerText = "LIBRE";
-            }, 2000);
+            elLocation.innerText = anchored ? "ANCRÉ" : "LIBRE";
+            elLocation.style.color = anchored ? "#00f3ff" : "";
           }
         },
         () => {
-          // Refus de la localisation par l'utilisateur ou erreur GPS
-          elLocation.innerText = "LIBRE";
+          elLocation.innerText = anchored ? "ANCRÉ" : "LIBRE";
+          elLocation.style.color = anchored ? "#00f3ff" : "";
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
       );

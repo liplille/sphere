@@ -98,7 +98,7 @@ async function bootSync() {
       if (jwt) {
         setTimeout(() => {
           toastExploration.innerHTML =
-            "<strong style='color:#00f3ff'>Alliance confirmée.</strong><br>Ta sphère a synchronisé tes données.";
+            "<strong style='color:#00f3ff'>Lien créé.</strong><br>Sphère a synchronisé tes données.";
           toastExploration.classList.add("active");
           setTimeout(() => toastExploration.classList.remove("active"), 4000);
         }, 1000);
@@ -286,7 +286,7 @@ if (btnAncrageDream) {
       if (btnSubmit) {
         btnSubmit.disabled = false;
         btnSubmit.style.opacity = "";
-        btnSubmit.textContent = "Confier à la sphère";
+        btnSubmit.textContent = "Confier à Sphère";
       }
     }
 
@@ -659,6 +659,8 @@ renderer.domElement.addEventListener("pointerup", (e) => {
     outerShell.updateMatrixWorld();
 
     if (raycastSphere() && !isUiBlocking) {
+      // FLASH DORÉ — rollback : supprimer ce bloc if + rétablir le bloc normal sans la condition
+      if (appStep === 4) { triggerGoldFlash(); return; }
       ensureAudio();
       const n = 1 + Math.floor(Math.random() * 3);
       for (let k = 0; k < n; k++) spawnArc(hitLocal);
@@ -670,6 +672,20 @@ renderer.domElement.addEventListener("pointerup", (e) => {
     }
   }
 });
+
+// FLASH DORÉ — rollback : supprimer cette fonction
+function triggerGoldFlash() {
+  const flash = document.createElement("div");
+  flash.style.cssText = [
+    "position:fixed", "top:50%", "left:50%", "width:75vmin", "height:75vmin",
+    "transform:translate(-50%,-50%) scale(0.85)",
+    "background:radial-gradient(circle, rgba(255,204,85,0.65) 0%, rgba(255,160,30,0.25) 45%, transparent 72%)",
+    "pointer-events:none", "z-index:10", "border-radius:50%",
+    "animation:goldFlash 0.85s cubic-bezier(0.16,1,0.3,1) forwards",
+  ].join(";");
+  document.body.appendChild(flash);
+  flash.addEventListener("animationend", () => flash.remove(), { once: true });
+}
 
 function triggerNextStep() {
   if (appStep === 0) {
@@ -691,7 +707,7 @@ function triggerNextStep() {
 
     // 4. Mise à jour du Toast pour valoriser la découverte
     toastExploration.innerHTML =
-      "Extraction de potentiel réussie.<br><strong style='color:#00f3ff'>+10 REALS découverts dans la sphère.</strong>";
+      "Sphère récompense ton engagement.<br><strong style='color:#00f3ff'>+10 REALS ajoutés à ton capital.</strong>";
 
     setTimeout(() => {
       toastExploration.classList.add("active");
@@ -756,7 +772,7 @@ document
     }
 
     // Réponse cohérente : texte IA + indicateurs + reals + filament.
-    iaResponse.innerHTML = res.response;
+    iaResponse.innerHTML = res.response.replace(/ — /g, "<br>");
     HUD.setIndicators(res.complexity, res.clarity);
     HUD.setReals(res.reals);
     HUD.incFilaments();
@@ -784,7 +800,7 @@ document
     emailFormView.style.display = "none";
     emailSuccessView.style.display = "block";
     emailSuccessView.innerHTML =
-      '<h2 style="margin-bottom: 0">Création de l\'alliance...</h2><div class="loader" style="margin-top:20px"><div></div><div></div><div></div></div>';
+      '<h2 style="margin-bottom: 0">Création du lien...</h2><div class="loader" style="margin-top:20px"><div></div><div></div><div></div></div>';
 
     HUD.setState("PERSONNALISATION...", "#ffcc55"); // S'allume en Or
 
@@ -799,7 +815,7 @@ document
     } else {
       // ÉCHEC DU SERVEUR
       emailSuccessView.innerHTML =
-        '<h2 style="margin-bottom: 0; color:#ff4444">La sphère est troublée. Réessaie.</h2>';
+        '<h2 style="margin-bottom: 0; color:#ff4444">Sphère est troublée. Réessaie.</h2>';
 
       setTimeout(() => {
         emailSuccessView.style.display = "none";
@@ -838,8 +854,8 @@ document
   .getElementById("btn-submit-code")
   .addEventListener("click", async () => {
     const code = (codeInput.value || "").replace(/\D/g, "");
-    if (code.length < 6 || code.length > 8) {
-      codeError.textContent = "Le code comporte 6 à 8 chiffres.";
+    if (code.length !== 6) {
+      codeError.textContent = "Le code comporte 6 chiffres.";
       return;
     }
     codeError.textContent = "";
@@ -850,7 +866,7 @@ document
     if (res && res.ok) {
       // Alliance scellée : on nettoie l'état d'attente, on synchronise, on passe CONNECTÉ.
       localStorage.removeItem("sphere_pending_email");
-      HUD.setState("ALLIANCE SCELLÉE", "#00f3ff"); // sort de « VÉRIFICATION… »
+      HUD.setState("LIEN CRÉÉ", "#00f3ff"); // sort de « VÉRIFICATION… »
       window.API.setToken(res.token);
       HUD.setReals(res.reals);
       HUD.setFilaments(res.filaments);
@@ -861,13 +877,14 @@ document
       emailCodeView.style.display = "none";
       emailSuccessView.style.display = "block";
       emailSuccessView.innerHTML =
-        '<h2 style="margin-bottom: 0; color:#00f3ff">Alliance confirmée. Ta sphère est connectée.</h2>';
+        '<h2 style="margin-bottom: 0; color:#00f3ff">Lien créé. Sphère est connectée.</h2>';
 
       setTimeout(() => {
         modalEmail.classList.remove("active");
         isUiBlocking = false;
         appStep = 4;
-        HUD.setOnline(); // setOnline pose son propre texte ("CONNECTÉ AU RÉSEAU")
+        HUD.setOnline();
+        HUD.setState("ASSIMILATION DES INTENTIONS", "#00f3ff");
       }, 2500);
     } else {
       console.warn("[confirm] réponse:", res);
@@ -917,8 +934,8 @@ function resumePendingConfirmation() {
          14b. AIDES FORMULAIRE (cohérence / erreur)
          ============================================================ */
 const MSG_INCOHERENT =
-  "La sphère n'a pas capté d'intention réelle… Parle-nous de ce que tu veux vraiment créer.";
-const MSG_ERROR = "La sphère est troublée. Réessaie dans un instant.";
+  "Sphère n'a pas capté d'intention réelle… Parle-nous de ce que tu veux vraiment créer.";
+const MSG_ERROR = "Sphère est troublée. Réessaie dans un instant.";
 
 function showFormMessage(msg, clearInput) {
   const err = document.getElementById("coherence-error");
