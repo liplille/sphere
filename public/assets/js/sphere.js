@@ -769,7 +769,13 @@ document
     }
 
     // Réponse cohérente : texte IA + indicateurs + reals + filament.
-    iaResponse.innerHTML = res.response.replace(/ — /g, "<br>");
+    // La réponse IA est du texte brut : échappement HTML obligatoire avant
+    // innerHTML (sinon XSS possible si l'IA se fait dicter du HTML).
+    iaResponse.innerHTML = res.response
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/ — /g, "<br>");
     HUD.setIndicators(res.complexity, res.clarity);
     HUD.setReals(res.reals);
     HUD.incFilaments();

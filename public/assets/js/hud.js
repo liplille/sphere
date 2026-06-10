@@ -13,7 +13,6 @@ window.HUD = (function () {
   const elState = $("hud-state");
   const networkDot = $("network-dot");
   const networkText = $("network-text");
-  const elMessaging = $("hud-messaging");
   const dreamInput = $("dream-input");
 
   let realsBase = 12;
@@ -60,17 +59,10 @@ window.HUD = (function () {
     elState.innerHTML = t;
     elState.style.color = color || "";
   }
-  function setStateColor(color) {
-    elState.style.color = color || "";
-  }
   function setOnline() {
     networkDot.classList.remove("offline");
     networkText.innerText = "CONNECTÉ AU RÉSEAU";
     networkText.style.color = "";
-  }
-  function activateMessaging() {
-    elMessaging.innerText = "ACTIVE";
-    elMessaging.style.color = "#00f3ff";
   }
   function setFilaments(n) {
     filaments = n;
@@ -176,12 +168,10 @@ window.HUD = (function () {
     setIndicators,
     incFilaments,
     setState,
-    setStateColor,
     setOnline,
-    activateMessaging,
     initAncrage,
     isAnchored: () => anchored,
     setFilaments,
-    setAnchored, // <-- Lignes rajoutées
+    setAnchored,
   };
 })();

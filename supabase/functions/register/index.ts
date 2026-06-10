@@ -10,6 +10,14 @@ import { rateLimitByIp } from "../_shared/ratelimit.ts";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const RESEND_FROM = Deno.env.get("RESEND_FROM") || "sphere@yesin.media";
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 Deno.serve(async (req) => {
   const pre = handleCors(req);
   if (pre) return pre;
@@ -59,6 +67,7 @@ Deno.serve(async (req) => {
       .from("intentions")
       .select("dream_text, complexity, clarity")
       .eq("session_id", session.id)
+      .eq("coherent", true) // les intentions KO sont historisées mais jamais affichées
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -98,11 +107,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // dream_text est saisi par l'utilisateur : échappement obligatoire avant
+    // insertion dans le HTML (sinon injection de contenu dans un email envoyé
+    // depuis notre domaine, vers une adresse choisie par l'attaquant).
     const intentionBlock = intention?.dream_text
       ? `<tr><td style="padding:0 40px 28px 40px;">
           <div style="background:rgba(255,255,255,0.02);border-left:2px solid #ffcc55;padding:16px;border-radius:0 8px 8px 0;">
             <p style="color:#888888;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px 0;font-family:monospace;">[INTENTION TRANSMISE]</p>
-            <p style="color:#fff;font-size:15px;font-style:italic;line-height:1.6;margin:0;">"${intention.dream_text}"</p>
+            <p style="color:#fff;font-size:15px;font-style:italic;line-height:1.6;margin:0;">"${escapeHtml(intention.dream_text)}"</p>
           </div>
         </td></tr>`
       : "";

@@ -88,15 +88,11 @@ Deno.serve(async (req) => {
     }
 
     if (!user) {
-      // Diagnostic : on logge ET on renvoie le détail dans la réponse
-      // (lisible dans la console réseau du navigateur). À retirer une fois OK.
+      // Détail des tentatives dans les logs serveur uniquement —
+      // jamais dans la réponse (pas d'info interne exposée au client).
       console.error("verifyOtp échec —", { email, codeLen: code.length, attempts });
       return new Response(
-        JSON.stringify({
-          ok: false,
-          error: "Code invalide ou expiré",
-          debug: attempts,
-        }),
+        JSON.stringify({ ok: false, error: "Code invalide ou expiré" }),
         { status: 401, headers },
       );
     }
@@ -120,12 +116,15 @@ Deno.serve(async (req) => {
       .update({ user_id: user.id })
       .eq("id", session.id);
 
-    // Indicateurs du dernier rêve + nombre de filaments.
+    // Indicateurs du dernier rêve cohérent + nombre de filaments
+    // (les intentions KO historisées sont exclues, comme dans /sync).
     const { data: intentions, count } = await supabase
       .from("intentions")
       .select("complexity, clarity", { count: "exact" })
       .eq("session_id", session.id)
-      .order("created_at", { ascending: false });
+      .eq("coherent", true)
+      .order("created_at", { ascending: false })
+      .limit(1);
 
     const last = intentions && intentions.length > 0 ? intentions[0] : null;
 

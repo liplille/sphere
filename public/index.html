@@ -8,7 +8,7 @@
     />
     <title>Sphère</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="/assets/css/sphere.css?v=2" />
+    <link rel="stylesheet" href="/assets/css/sphere.css?v=3" />
   </head>
   <body>
     <div class="glow" id="glow"></div>
@@ -140,11 +140,8 @@
         </div>
       </div>
 
-      <!-- Toast Exploration -->
-      <div class="toast" id="toast-exploration">
-        Exploration initiée. Nous te préviendrons dès que les premiers résultats
-        apparaîtront.
-      </div>
+      <!-- Toast (rempli en JS : message de bienvenue au retour par email) -->
+      <div class="toast" id="toast-exploration"></div>
 
       <!-- Modal Email -->
       <div class="glass-modal ui-element" id="modal-email">
@@ -239,11 +236,11 @@
     </script>
 
     <!-- Config publique + couches applicatives (mocks en Étape 2) -->
-    <script src="/assets/js/config.js?v=2"></script>
-    <script src="/assets/js/api.js?v=2"></script>
-    <script src="/assets/js/hud.js?v=2"></script>
+    <script src="/assets/js/config.js?v=3"></script>
+    <script src="/assets/js/api.js?v=3"></script>
+    <script src="/assets/js/hud.js?v=3"></script>
 
     <!-- Moteur principal (module : importe Three.js via l'importmap) -->
-    <script type="module" src="/assets/js/sphere.js?v=2"></script>
+    <script type="module" src="/assets/js/sphere.js?v=3"></script>
   </body>
 </html>

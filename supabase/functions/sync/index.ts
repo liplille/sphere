@@ -77,12 +77,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // On compte le nombre de rêves et on récupère le dernier pour les indicateurs
+    // Compte les rêves cohérents (filaments) + indicateurs du dernier.
+    // Les intentions KO sont historisées en base mais exclues de l'affichage.
+    // Colonnes réduites : pas besoin de remonter les dream_text complets ici.
     const { data: intentions, count } = await supabase
       .from("intentions")
-      .select("*", { count: "exact" })
+      .select("complexity, clarity", { count: "exact" })
       .eq("session_id", session.id)
-      .order("created_at", { ascending: false });
+      .eq("coherent", true)
+      .order("created_at", { ascending: false })
+      .limit(1);
 
     const lastIntention =
       intentions && intentions.length > 0 ? intentions[0] : null;
