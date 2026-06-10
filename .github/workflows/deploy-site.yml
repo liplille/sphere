@@ -4,7 +4,7 @@
 #
 # Secrets à créer dans GitHub (Settings → Secrets and variables → Actions) :
 #   FTP_SERVER   — ex. node12-xx.n0c.com (ou ftp.yesin.media)
-#   FTP_USERNAME — compte FTP dont la RACINE est le web root de yesin.media
+#   FTP_USERNAME — compte FTP (racine = home n0c ; web root = ./public_html/)
 #   FTP_PASSWORD
 # ============================================================
 name: Deploy site (n0c)
@@ -15,6 +15,11 @@ on:
     paths-ignore:
       - "supabase/**"
       - "README.md"
+
+env:
+  # Les actions tierces tournent encore sur Node 20 (déprécié, retiré sept. 2026) ;
+  # force Node 24 dès maintenant pour supprimer le warning et anticiper la bascule.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   build-and-deploy:
@@ -41,4 +46,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           local-dir: ./dist/
-          server-dir: ./
+          # Web root n0c de yesin.media (le lien "www" pointe dessus).
+          server-dir: ./public_html/

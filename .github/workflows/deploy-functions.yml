@@ -17,6 +17,10 @@ on:
       - "supabase/functions/**"
       - "supabase/config.toml"
 
+env:
+  # Force Node 24 pour les actions tierces (Node 20 déprécié, retiré sept. 2026).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
