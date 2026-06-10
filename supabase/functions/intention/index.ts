@@ -30,6 +30,20 @@ Deno.serve(async (req) => {
     const okIp = await rateLimitByIp("intention", req, 40, 600);
     if (!okToken || !okIp) return json({ error: "rate_limited" }, 429, headers);
 
+    // Session : lookup ou création avant l'appel Claude
+    // (nécessaire pour historiser aussi les intentions KO)
+    const supabase = serviceClient();
+    let session = null;
+    {
+      const { data } = await supabase.from("sessions").select("id, reals_total").eq("token", token).maybeSingle();
+      session = data;
+    }
+    if (!session) {
+      const { data, error } = await supabase.from("sessions").insert({ token }).select("id, reals_total").single();
+      if (error) throw error;
+      session = data;
+    }
+
     // 1) Appel Claude
     const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -49,7 +63,13 @@ Deno.serve(async (req) => {
     try { parsed = JSON.parse(stripFences(rawText)); }
     catch (_e) { console.error("JSON illisible de Claude:", rawText); return json({ error: "Réponse IA illisible" }, 502, headers); }
 
-    if (!parsed.coherent) return json({ coherent: false }, 200, headers);
+    // Intention KO : on l'historise pour les stats, sans récompense
+    if (!parsed.coherent) {
+      await supabase.from("intentions").insert({
+        session_id: session.id, dream_text: dream, coherent: false, reals: 0,
+      });
+      return json({ coherent: false }, 200, headers);
+    }
 
     const result = {
       coherent: true,
@@ -58,18 +78,6 @@ Deno.serve(async (req) => {
       clarity: normalize(parsed.clarity, ["TROUBLE", "NETTE", "LIMPIDE"], "TROUBLE"),
       reals: clampReals(parsed.reals) + COHERENCE_BONUS,
     };
-
-    const supabase = serviceClient();
-    let session = null;
-    {
-      const { data } = await supabase.from("sessions").select("id, reals_total").eq("token", token).maybeSingle();
-      session = data;
-    }
-    if (!session) {
-      const { data, error } = await supabase.from("sessions").insert({ token }).select("id, reals_total").single();
-      if (error) throw error;
-      session = data;
-    }
 
     const { error: insErr } = await supabase.from("intentions").insert({
       session_id: session.id, dream_text: dream, ai_response: result.response,

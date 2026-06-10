@@ -705,23 +705,20 @@ function triggerNextStep() {
     // +10 REALS pour l'exploration (Q2) — géré par le HUD (socle + animation).
     HUD.addReals(10);
 
-    // 4. Mise à jour du Toast pour valoriser la découverte
-    toastExploration.innerHTML =
-      "Sphère récompense ton engagement.<br><strong style='color:#00f3ff'>+10 REALS ajoutés à ton capital.</strong>";
-
+    const rewardBanner = document.getElementById("reward-banner");
     setTimeout(() => {
-      toastExploration.classList.add("active");
+      rewardBanner.classList.add("active");
       exploreCount.innerText = "1";
 
       // Déclenche l'éveil visuel intense de la sphère pour marquer le coup
       playWake();
 
       setTimeout(() => {
-        toastExploration.classList.remove("active");
+        rewardBanner.classList.remove("active");
         isUiBlocking = false;
       }, 4000);
       appStep = 3;
-    }, 400); // Petit délai pour laisser l'animation du HUD respirer avant le toast
+    }, 400);
   } else if (appStep === 3) {
     isUiBlocking = true;
     setTimeout(() => {
@@ -834,6 +831,16 @@ const codeError = document.getElementById("code-error");
 // Ouvre la modal directement sur la vue « saisie du code » (depuis le submit
 // email OU au rechargement de page si une confirmation est en attente).
 function showCodeEntry(email) {
+  // Garde : si pas d'email disponible, retour au formulaire plutôt qu'une modal vide
+  if (!email) {
+    emailFormView.style.display = "block";
+    emailSuccessView.style.display = "none";
+    emailCodeView.style.display = "none";
+    modalEmail.classList.add("active");
+    isUiBlocking = true;
+    appStep = 3;
+    return;
+  }
   pendingEmail = email;
   modalEmail.classList.add("active");
   isUiBlocking = true;
@@ -843,12 +850,25 @@ function showCodeEntry(email) {
   emailFormView.style.display = "none";
   emailSuccessView.style.display = "none";
   emailCodeView.style.display = "block";
+  const emailDisplay = document.getElementById("pending-email-display");
+  if (emailDisplay) emailDisplay.textContent = email;
   if (codeError) codeError.textContent = "";
   HUD.setState("EN ATTENTE DU CODE...", "#ffcc55");
   setTimeout(() => {
     if (codeInput) codeInput.focus();
   }, 100);
 }
+
+document.getElementById("btn-wrong-email").addEventListener("click", () => {
+  localStorage.removeItem("sphere_pending_email");
+  pendingEmail = "";
+  emailCodeView.style.display = "none";
+  emailSuccessView.style.display = "none";
+  emailFormView.style.display = "block";
+  emailInput.value = "";
+  HUD.setState("ÉCOUTE ACTIVE");
+  setTimeout(() => emailInput.focus(), 100);
+});
 
 document
   .getElementById("btn-submit-code")
@@ -1327,3 +1347,15 @@ addEventListener("resize", () => {
 HUD.initAncrage(() => playWake());
 
 animate();
+
+// Empêche l'écran de s'éteindre automatiquement pendant l'expérience
+if ("wakeLock" in navigator) {
+  let wakeLock = null;
+  const acquireWakeLock = async () => {
+    try { wakeLock = await navigator.wakeLock.request("screen"); } catch (_) {}
+  };
+  acquireWakeLock();
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") acquireWakeLock();
+  });
+}

@@ -8,7 +8,7 @@
     />
     <title>Sphère</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="/assets/css/sphere.css" />
+    <link rel="stylesheet" href="/assets/css/sphere.css?v=2" />
   </head>
   <body>
     <div class="glow" id="glow"></div>
@@ -164,9 +164,27 @@
           </button>
         </div>
         <div id="email-code-view" style="display: none">
-          <h2 style="margin-bottom: 16px">
-            Un code vient de t'être envoyé par email. Saisis-le pour créer ton lien avec Sphère.
+          <h2 style="margin-bottom: 6px">
+            Un code vient d'être envoyé à
           </h2>
+          <p id="pending-email-display" style="
+            margin: 0 0 6px 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.75);
+            word-break: break-all;
+          "></p>
+          <button id="btn-wrong-email" style="
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 11px;
+            font-family: inherit;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 20px;
+            text-decoration: underline;
+            letter-spacing: 0.5px;
+          ">Ce n'est pas ton email ? Resaisir</button>
           <input
             type="text"
             id="code-input"
@@ -203,6 +221,13 @@
       </div>
     </div>
 
+    <!-- Bannière récompense exploration (remplace le toast pour le clic 2) -->
+    <div class="reward-banner" id="reward-banner">
+      <div class="rb-label">Sphère récompense ton engagement</div>
+      <div class="rb-amount">+10 REALS</div>
+      <div class="rb-sub">ajoutés à ton capital</div>
+    </div>
+
     <!-- Librairies 3D -->
     <script type="importmap">
       {
@@ -214,11 +239,11 @@
     </script>
 
     <!-- Config publique + couches applicatives (mocks en Étape 2) -->
-    <script src="/assets/js/config.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/hud.js"></script>
+    <script src="/assets/js/config.js?v=2"></script>
+    <script src="/assets/js/api.js?v=2"></script>
+    <script src="/assets/js/hud.js?v=2"></script>
 
     <!-- Moteur principal (module : importe Three.js via l'importmap) -->
-    <script type="module" src="/assets/js/sphere.js"></script>
+    <script type="module" src="/assets/js/sphere.js?v=2"></script>
   </body>
 </html>

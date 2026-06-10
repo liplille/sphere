@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
     const intentionBlock = intention?.dream_text
       ? `<tr><td style="padding:0 40px 28px 40px;">
           <div style="background:rgba(255,255,255,0.02);border-left:2px solid #ffcc55;padding:16px;border-radius:0 8px 8px 0;">
-            <p style="color:rgba(255,255,255,0.4);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px 0;font-family:monospace;">[INTENTION TRANSMISE]</p>
+            <p style="color:#888888;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px 0;font-family:monospace;">[INTENTION TRANSMISE]</p>
             <p style="color:#fff;font-size:15px;font-style:italic;line-height:1.6;margin:0;">"${intention.dream_text}"</p>
           </div>
         </td></tr>`
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
         <tr>
           <td style="padding:40px 40px 24px 40px;text-align:center;">
             <h1 style="color:#ffcc55;font-weight:300;font-size:24px;letter-spacing:4px;text-transform:uppercase;margin:0 0 4px 0;">Sphère est prête.</h1>
-            <p style="color:rgba(255,255,255,0.25);font-size:10px;letter-spacing:4px;text-transform:uppercase;margin:0;font-family:monospace;">CYCLE ÉVEIL_1.0.1</p>
+            <p style="color:#666666;font-size:10px;letter-spacing:4px;text-transform:uppercase;margin:0;font-family:monospace;">CYCLE ÉVEIL_1.0.1</p>
           </td>
         </tr>
 
@@ -122,10 +122,10 @@ Deno.serve(async (req) => {
 
         <tr>
           <td style="padding:0 40px 28px 40px;">
-            <p style="color:rgba(255,255,255,0.8);font-size:15px;line-height:1.7;margin:0 0 14px 0;">
+            <p style="color:#cccccc;font-size:15px;line-height:1.7;margin:0 0 14px 0;">
               Avec <strong style="color:#ffcc55;font-family:monospace;font-size:16px;">${session.reals_total} REALS</strong> injectés dans ton capital, la réalisation est déjà en mouvement.
             </p>
-            <p style="color:rgba(255,255,255,0.8);font-size:15px;line-height:1.7;margin:0;">
+            <p style="color:#cccccc;font-size:15px;line-height:1.7;margin:0;">
               Sphère n'est pas du genre à abandonner. Il ne reste plus qu'un détail à confirmer.
             </p>
           </td>
@@ -136,15 +136,15 @@ Deno.serve(async (req) => {
             <table width="100%" cellspacing="0" cellpadding="0" style="background:rgba(255,204,85,0.03);border:1px solid rgba(255,204,85,0.15);border-radius:8px;border-collapse:collapse;">
               <tr>
                 <td width="33%" style="padding:14px;text-align:center;border-right:1px solid rgba(255,204,85,0.1);">
-                  <div style="font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;font-family:monospace;">Complexité</div>
+                  <div style="font-size:9px;color:#888888;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;font-family:monospace;">Complexité</div>
                   <div style="font-size:13px;color:#ffcc55;font-weight:bold;font-family:monospace;">${intention?.complexity || "N/A"}</div>
                 </td>
                 <td width="33%" style="padding:14px;text-align:center;border-right:1px solid rgba(255,204,85,0.1);">
-                  <div style="font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;font-family:monospace;">Clarté</div>
+                  <div style="font-size:9px;color:#888888;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;font-family:monospace;">Clarté</div>
                   <div style="font-size:13px;color:#ffcc55;font-weight:bold;font-family:monospace;">${intention?.clarity || "N/A"}</div>
                 </td>
                 <td width="33%" style="padding:14px;text-align:center;">
-                  <div style="font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;font-family:monospace;">Matérialisation</div>
+                  <div style="font-size:9px;color:#888888;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;font-family:monospace;">Matérialisation</div>
                   <div style="font-size:13px;color:#ffcc55;font-weight:bold;font-family:monospace;">${session.reals_total || 0} REALS</div>
                 </td>
               </tr>
@@ -154,16 +154,16 @@ Deno.serve(async (req) => {
 
         <tr>
           <td style="padding:12px 40px 32px 40px;text-align:center;border-top:1px dashed rgba(255,255,255,0.08);">
-            <p style="color:rgba(255,255,255,0.5);margin:0 0 16px 0;font-size:13px;letter-spacing:0.5px;">Saisis ce code pour créer ton lien avec Sphère :</p>
+            <p style="color:#999999;margin:0 0 16px 0;font-size:13px;letter-spacing:0.5px;">Saisis ce code pour créer ton lien avec Sphère :</p>
             <div style="display:inline-block;padding:14px 32px;background:rgba(255,204,85,0.06);border:1px solid #ffcc55;border-radius:10px;font-size:34px;font-weight:700;letter-spacing:10px;color:#ffcc55;font-family:monospace;">${emailOtp}</div>
           </td>
         </tr>
 
         <tr>
           <td style="padding:24px 40px 40px 40px;background:rgba(0,0,0,0.2);text-align:center;border-radius:0 0 16px 16px;">
-            <p style="color:rgba(255,255,255,0.35);margin:0 0 14px 0;font-size:12px;">La page d'origine s'est refermée ?</p>
+            <p style="color:#888888;margin:0 0 14px 0;font-size:12px;">La page d'origine s'est refermée ?</p>
             <a href="https://yesin.media/?confirm=${encodeURIComponent(email)}&t=${token}" style="display:inline-block;padding:12px 28px;background:#ffcc55;color:#0b0a0f;text-decoration:none;font-weight:700;border-radius:6px;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;">Forcer la reconnexion</a>
-            <p style="color:rgba(255,255,255,0.2);font-size:11px;margin:28px 0 0 0;line-height:1.5;">Ce code expire dans 1 heure.<br>Si tu n'es pas à l'origine de cette demande, ignore cet email.</p>
+            <p style="color:#666666;font-size:11px;margin:28px 0 0 0;line-height:1.5;">Ce code expire dans 1 heure.<br>Si tu n'es pas à l'origine de cette demande, ignore cet email.</p>
           </td>
         </tr>
 
