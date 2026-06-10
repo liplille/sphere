@@ -1,0 +1,44 @@
+# ============================================================
+# Déploiement du site sur n0c (PlanetHoster) via FTP.
+# Déclenché à chaque push sur main qui touche le frontend.
+#
+# Secrets à créer dans GitHub (Settings → Secrets and variables → Actions) :
+#   FTP_SERVER   — ex. node12-xx.n0c.com (ou ftp.yesin.media)
+#   FTP_USERNAME — compte FTP dont la RACINE est le web root de yesin.media
+#   FTP_PASSWORD
+# ============================================================
+name: Deploy site (n0c)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "supabase/**"
+      - "README.md"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build (Vite)
+        run: npm run build
+
+      - name: Deploy FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./dist/
+          server-dir: ./

@@ -8,7 +8,7 @@
     />
     <title>Sphère</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="/assets/css/sphere.css?v=3" />
+    <link rel="stylesheet" href="/src/sphere.css" />
   </head>
   <body>
     <div class="glow" id="glow"></div>
@@ -225,22 +225,7 @@
       <div class="rb-sub">ajoutés à ton capital</div>
     </div>
 
-    <!-- Librairies 3D -->
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-      }
-    </script>
-
-    <!-- Config publique + couches applicatives (mocks en Étape 2) -->
-    <script src="/assets/js/config.js?v=3"></script>
-    <script src="/assets/js/api.js?v=3"></script>
-    <script src="/assets/js/hud.js?v=3"></script>
-
-    <!-- Moteur principal (module : importe Three.js via l'importmap) -->
-    <script type="module" src="/assets/js/sphere.js?v=3"></script>
+    <!-- Point d'entrée unique (Vite bundle Three.js + config/api/hud/sphere) -->
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>

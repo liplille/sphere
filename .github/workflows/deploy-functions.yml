@@ -1,0 +1,33 @@
+# ============================================================
+# Déploiement des Edge Functions Supabase.
+# Déclenché à chaque push sur main qui touche supabase/functions ou config.toml.
+#
+# Secret à créer dans GitHub :
+#   SUPABASE_ACCESS_TOKEN — token personnel : app.supabase.com → Account → Access Tokens
+#
+# NB : les migrations SQL restent volontairement manuelles (supabase db push),
+# un schéma de base ne se déploie pas à l'aveugle.
+# ============================================================
+name: Deploy Supabase functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/**"
+      - "supabase/config.toml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy all functions
+        run: supabase functions deploy --project-ref rmrlpqklrblvweuxqisb
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

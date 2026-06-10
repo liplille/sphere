@@ -3,7 +3,7 @@
 
 const ALLOWED_ORIGINS = [
   "https://yesin.media",
-  // "http://localhost:5500", // ← décommente pour le dev local (Live Server, etc.)
+  "http://localhost:5173", // dev local : npm run dev (Vite)
 ];
 
 export function corsHeaders(origin: string | null) {
