@@ -1,12 +1,16 @@
 <?php
 // ============================================================
-// go/index.php — QR dynamique : log scan + alerte email + redirect 302
+// go/index.php — QR dynamique : redirect 302 immédiat + log scan + alerte email
 //
 // Chemin secrets sur n0c :
 //   /home/USER/public_html/go/index.php  (ce fichier)
 //   /home/USER/private/secrets.php       (hors web root)
 //
 // Le require remonte de go/ → public_html/ → home/USER/ → private/
+//
+// Ordre volontaire : on répond 302 au téléphone DÈS que la destination est
+// connue, puis on continue (connexion fermée) pour logger le scan et envoyer
+// l'alerte. Celui qui scanne ne paie jamais la latence Supabase/Resend.
 // ============================================================
 
 $secrets = require __DIR__ . '/../../private/secrets.php';
@@ -17,11 +21,12 @@ $resendKey    = $secrets['RESEND_API_KEY'];
 $resendFrom   = $secrets['RESEND_FROM'];
 $adminEmail   = $secrets['ADMIN_ALERT_EMAIL'];
 
+// o= : format court pour les QR ; slug= : fallback pour les anciens QR.
 $slug = preg_replace('/[^a-z0-9_-]/i', '', $_GET['o'] ?? $_GET['slug'] ?? 'sphere');
 if ($slug === '') $slug = 'sphere';
 
-// ── 1. Lire la destination depuis redirects ──────────────────
-$destination = 'https://yesin.media/'; // fallback
+// ── 1. Lire la destination depuis redirects (seul appel avant le 302) ──
+$destination = 'https://yesin.media/'; // fallback si slug inconnu ou Supabase muet
 
 $ch = curl_init($supabaseUrl . '/rest/v1/redirects?slug=eq.' . urlencode($slug) . '&active=eq.true&select=destination&limit=1');
 curl_setopt_array($ch, [
@@ -31,7 +36,8 @@ curl_setopt_array($ch, [
         'Authorization: Bearer ' . $anonKey,
         'Accept: application/json',
     ],
-    CURLOPT_TIMEOUT => 5,
+    CURLOPT_CONNECTTIMEOUT => 2,
+    CURLOPT_TIMEOUT        => 3,
 ]);
 $body = curl_exec($ch);
 curl_close($ch);
@@ -43,15 +49,32 @@ if ($body) {
     }
 }
 
-// ── 2. Collecter les métadonnées du scan ─────────────────────
-$ip = '';
-foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'] as $h) {
-    if (!empty($_SERVER[$h])) {
-        $ip = explode(',', $_SERVER[$h])[0];
-        $ip = trim($ip);
-        break;
+// ── 2. Rediriger MAINTENANT et fermer la connexion client ──────
+ignore_user_abort(true); // le script continue même si le téléphone est parti
+
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Location: ' . $destination, true, 302);
+
+if (function_exists('litespeed_finish_request')) {
+    litespeed_finish_request();   // n0c tourne sous LiteSpeed
+} elseif (function_exists('fastcgi_finish_request')) {
+    fastcgi_finish_request();     // PHP-FPM
+} else {
+    // Fallback générique : on vide les buffers, le client a son 302.
+    header('Content-Length: 0');
+    header('Connection: close');
+    while (ob_get_level() > 0) {
+        ob_end_flush();
     }
+    flush();
 }
+
+// ── 3. Métadonnées du scan ───────────────────────────────────
+// REMOTE_ADDR fait foi : pas de proxy devant n0c, et X-Forwarded-For est
+// forgeable par le client. Le header Cloudflare est gardé au cas où un CDN
+// serait ajouté un jour (il n'existe que derrière Cloudflare).
+$ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+$ip = trim(explode(',', $ip)[0]);
 
 $ipHash    = $ip ? hash('sha256', $ip) : null;
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
@@ -62,7 +85,7 @@ if (function_exists('geoip_country_code_by_name') && $ip) {
     $country = @geoip_country_code_by_name($ip) ?: null;
 }
 
-// ── 3. Insérer dans scan_events (async : fire-and-forget) ────
+// ── 4. Insérer dans scan_events ──────────────────────────────
 $scanPayload = json_encode([
     'slug'       => $slug,
     'ip_hash'    => $ipHash,
@@ -86,7 +109,7 @@ curl_setopt_array($ch2, [
 curl_exec($ch2);
 curl_close($ch2);
 
-// ── 4. Alerte email admin via Resend ─────────────────────────
+// ── 5. Alerte email admin via Resend ─────────────────────────
 $now     = gmdate('Y-m-d H:i:s') . ' UTC';
 $ua      = htmlspecialchars($userAgent ?? '—', ENT_QUOTES);
 $ctry    = htmlspecialchars($country ?? '—', ENT_QUOTES);
@@ -124,7 +147,4 @@ curl_setopt_array($ch3, [
 curl_exec($ch3);
 curl_close($ch3);
 
-// ── 5. Redirection vers la destination ───────────────────────
-header('Cache-Control: no-store, no-cache, must-revalidate');
-header('Location: ' . $destination, true, 302);
 exit;
