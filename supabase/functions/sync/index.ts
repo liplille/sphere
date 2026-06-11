@@ -40,6 +40,12 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const reqToken = body.token;
 
+    // Attribution QR (optionnelle) : slug du support physique, posé par le
+    // redirect /go/ via ?src=. Validation stricte côté serveur — mêmes
+    // caractères que le slug PHP ([a-z0-9_-]), 40 max — sinon ignoré.
+    const rawSource = typeof body.source === "string" ? body.source : "";
+    const source = /^[a-z0-9_-]{1,40}$/i.test(rawSource) ? rawSource : null;
+
     let session = null;
 
     // Cas 1 : L'utilisateur arrive via le lien de l'email (Cross-device)
@@ -67,6 +73,21 @@ Deno.serve(async (req) => {
         .eq("token", reqToken)
         .maybeSingle();
       session = data;
+    }
+
+    // Première visite via QR : on crée la session tout de suite pour graver
+    // l'attribution — sinon elle naîtrait plus tard dans /intention ou /geo
+    // sans cette info. `source` n'est posé QU'À la création : une session
+    // existante n'est jamais retouchée (premier touchpoint gagnant).
+    // Best-effort : un échec (ex. course sur le token) ne bloque pas le boot,
+    // et la réponse reste celle d'une session vierge (rien à synchroniser).
+    const tokenOk =
+      typeof reqToken === "string" && reqToken.length > 0 && reqToken.length <= 100;
+    if (!session && source && tokenOk) {
+      const { error: insErr } = await supabase
+        .from("sessions")
+        .insert({ token: reqToken, source });
+      if (insErr) console.error("création session avec source:", insErr);
     }
 
     if (!session) {

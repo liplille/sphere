@@ -28,8 +28,10 @@ window.API = {
     localStorage.setItem("sphere_session_token", t);
   },
 
-  // Synchronisation au chargement / retour d'email
-  async syncData(jwt = null) {
+  // Synchronisation au chargement / retour d'email.
+  // `source` (optionnel) : slug d'attribution QR (?src=) — gravé par /sync
+  // uniquement à la création de la session, ignoré ensuite.
+  async syncData(jwt = null, source = null) {
     const headers = fnHeaders();
     if (jwt) headers["authorization"] = "Bearer " + jwt;
 
@@ -37,7 +39,7 @@ window.API = {
       const res = await fetch(window.FN_BASE + "/sync", {
         method: "POST",
         headers: headers,
-        body: JSON.stringify({ token: SESSION_TOKEN }),
+        body: JSON.stringify({ token: SESSION_TOKEN, source: source || undefined }),
       });
       if (!res.ok) return { ok: false };
       return await res.json();

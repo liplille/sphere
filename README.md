@@ -66,7 +66,8 @@ yesin-sphere/
     │   ├── …0001_init.sql        ← tables redirects/scan_events/sessions/intentions + RLS
     │   ├── …0002_grants.sql      ← GRANT explicites à service_role (auto-expose OFF)
     │   ├── …0003_ratelimit.sql   ← table rate_limits + RPC check_rate_limit()
-    │   └── …0004_geo.sql         ← sessions.address (lat/lng/city/country déjà en 0001)
+    │   ├── …0004_geo.sql         ← sessions.address (lat/lng/city/country déjà en 0001)
+    │   └── …0005_session_source.sql ← sessions.source (attribution QR via ?src=)
     └── functions/
         ├── _shared/
         │   ├── cors.ts           ← headers CORS (origine yesin.media)
@@ -216,11 +217,18 @@ Une session = un visiteur (avant compte). Rattachée à un user après l'email.
 | city          | text               | nullable (pour l'admin)               |
 | country       | text               | nullable                              |
 | address       | text               | nullable — adresse complète (mig 0004)|
+| source        | text               | nullable — slug du support physique scanné (mig 0005), gravé à la création uniquement |
 | created_at    | timestamptz        |                                       |
 
 > ⚠️ `lat/lng/city/country/address` sont **réservées au serveur**. `/sync` et
 > `/confirm` ne renvoient **jamais** ces champs au navigateur — seul le booléen
 > `anchored` (= `geo_granted`) sort.
+
+> **Attribution QR** : scan → `/go/?o=<slug>` → 302 vers `yesin.media/?src=<slug>` →
+> le front nettoie et persiste `src` (localStorage `sphere_src`) → `/sync` le grave
+> dans `sessions.source` **à la création de la session uniquement** (premier
+> touchpoint gagnant, jamais écrasé). Permet de savoir quel support (voiture,
+> carte, flyer…) amène des inscrits.
 
 ### `intentions`
 

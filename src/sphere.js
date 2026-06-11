@@ -62,6 +62,16 @@ async function bootSync() {
     window.API.setToken(tokenFromLink);
   }
 
+  // Attribution QR : la destination du redirect /go/ ajoute ?src=<slug>
+  // (ex. ?src=i30). Même nettoyage que le slug côté PHP ([a-z0-9_-], 40 max),
+  // persisté en localStorage pour survivre aux rechargements, puis transmis
+  // à /sync qui le grave à la création de la session (premier touchpoint).
+  const srcParam = (params.get("src") || "")
+    .replace(/[^a-z0-9_-]/gi, "")
+    .slice(0, 40);
+  if (srcParam) localStorage.setItem("sphere_src", srcParam);
+  const source = localStorage.getItem("sphere_src");
+
   // Si on vient de cliquer sur le lien de l'email
   if (hash.includes("access_token=")) {
     const params = new URLSearchParams(hash.substring(1));
@@ -70,7 +80,7 @@ async function bootSync() {
   }
 
   // On interroge le serveur
-  const data = await window.API.syncData(jwt);
+  const data = await window.API.syncData(jwt, source);
 
   if (data && data.ok) {
     // 1. On adopte le token de l'appareil d'origine
