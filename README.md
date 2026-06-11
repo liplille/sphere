@@ -224,7 +224,7 @@ Une session = un visiteur (avant compte). Rattachée à un user après l'email.
 
 ### `intentions`
 
-Une ligne par réponse Q1 cohérente.
+Une ligne par réponse Q1, **y compris les incohérentes** (historisées pour les stats avec `coherent: false`, colonnes IA à null, `reals: 0`). Toutes les requêtes qui affichent ou comptent des intentions côté utilisateur filtrent `coherent = true`.
 
 | Colonne     | Type        | Note                                                          |
 | ----------- | ----------- | ------------------------------------------------------------- |
@@ -234,7 +234,7 @@ Une ligne par réponse Q1 cohérente.
 | ai_response | text        | réponse Claude                                                |
 | complexity  | text        | BASIQUE / PROFONDE / CRYPTIQUE                                |
 | clarity     | text        | TROUBLE / NETTE / LIMPIDE                                     |
-| coherent    | bool        | toujours true ici (les incohérentes ne sont pas sauvegardées) |
+| coherent    | bool        | false = intention KO (gardée pour stats, jamais affichée)     |
 | reals       | int         | reals attribués pour cette intention                          |
 | created_at  | timestamptz |                                                               |
 
@@ -308,7 +308,7 @@ Claude évalue dans le même appel. JSON retourné :
 { "coherent": false, "response": null,  "complexity": null,       "clarity": null,     "reals": null }
 ```
 
-Si `coherent: false` : pas de save, pas de décrément d'explorations, pas de switch de vue. Message doux dans le formulaire (« La sphère n'a pas capté d'intention réelle… Parle-nous de ce que tu veux vraiment créer. »), l'input se vide et reprend le focus.
+Si `coherent: false` : l'intention est quand même historisée en base (stats), mais côté client : pas de décrément d'explorations, pas de switch de vue. Message doux dans le formulaire (« La sphère n'a pas capté d'intention réelle… Parle-nous de ce que tu veux vraiment créer. »), l'input se vide et reprend le focus.
 
 ---
 

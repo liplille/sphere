@@ -17,7 +17,7 @@ $resendKey    = $secrets['RESEND_API_KEY'];
 $resendFrom   = $secrets['RESEND_FROM'];
 $adminEmail   = $secrets['ADMIN_ALERT_EMAIL'];
 
-$slug = preg_replace('/[^a-z0-9_-]/i', '', $_GET['slug'] ?? 'sphere');
+$slug = preg_replace('/[^a-z0-9_-]/i', '', $_GET['o'] ?? $_GET['slug'] ?? 'sphere');
 if ($slug === '') $slug = 'sphere';
 
 // ── 1. Lire la destination depuis redirects ──────────────────
