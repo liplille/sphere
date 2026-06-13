@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: CLAUDE_MODEL, max_tokens: 600, system: SYSTEM_PROMPT, messages: [{ role: "user", content: dream }] }),
+      body: JSON.stringify({ model: CLAUDE_MODEL, max_tokens: 900, system: SYSTEM_PROMPT, messages: [{ role: "user", content: dream }] }),
     });
     if (!claudeRes.ok) {
       console.error("Claude API error:", claudeRes.status, await claudeRes.text());
@@ -73,14 +73,18 @@ Deno.serve(async (req) => {
 
     const result = {
       coherent: true,
-      response: String(parsed.response ?? ""),
+      message: String(parsed.message ?? ""),
+      spark: String(parsed.spark ?? ""),
+      next: String(parsed.next ?? ""),
+      emotion: String(parsed.emotion ?? "").toLowerCase().slice(0, 40),
       complexity: normalize(parsed.complexity, ["BASIQUE", "PROFONDE", "CRYPTIQUE"], "BASIQUE"),
       clarity: normalize(parsed.clarity, ["TROUBLE", "NETTE", "LIMPIDE"], "TROUBLE"),
       reals: clampReals(parsed.reals) + COHERENCE_BONUS,
     };
 
     const { error: insErr } = await supabase.from("intentions").insert({
-      session_id: session.id, dream_text: dream, ai_response: result.response,
+      session_id: session.id, dream_text: dream, ai_response: result.message,
+      spark: result.spark, next_question: result.next, emotion: result.emotion,
       complexity: result.complexity, clarity: result.clarity, coherent: true, reals: result.reals,
     });
     if (insErr) throw insErr;

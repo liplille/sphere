@@ -778,14 +778,24 @@ document
       return;
     }
 
-    // Réponse cohérente : texte IA + indicateurs + reals + filament.
-    // La réponse IA est du texte brut : échappement HTML obligatoire avant
+    // Réponse cohérente : message + étincelle + relance, indicateurs, reals, filament.
+    // Les champs IA sont du texte brut : échappement HTML obligatoire avant
     // innerHTML (sinon XSS possible si l'IA se fait dicter du HTML).
-    iaResponse.innerHTML = res.response
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/ — /g, "<br>");
+    const esc = (s) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    const paragraphs = esc(res.message)
+      .split(/\n+/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => `<p>${p}</p>`)
+      .join("");
+    let html = `<div class="response-message">${paragraphs}</div>`;
+    if (res.spark) html += `<p class="response-spark">${esc(res.spark)}</p>`;
+    if (res.next) html += `<p class="response-next">${esc(res.next)}</p>`;
+    iaResponse.innerHTML = html;
     HUD.setIndicators(res.complexity, res.clarity);
     HUD.setReals(res.reals);
     HUD.incFilaments();

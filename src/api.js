@@ -48,7 +48,7 @@ window.API = {
     }
   },
 
-  // Q1 -> { coherent, response, complexity, clarity, reals } | { coherent:false, error:true }
+  // Q1 -> { coherent, message, spark, next, emotion, complexity, clarity, reals } | { coherent:false, error:true }
   async submitIntention(text) {
     try {
       const res = await fetch(window.FN_BASE + "/intention", {
