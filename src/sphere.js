@@ -2,16 +2,24 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 const placeholders = [
-  "Ex : Voyager au bout du monde…",
-  "Ex : Acheter le dernier iPhone…",
-  "Ex : Trouver un appartement…",
-  "Ex : Lancer mon activité en freelance…",
+  "Ex : Voyager au bout du monde…", // évasion
+  "Ex : Promouvoir mon activité…", // business
+  "Ex : Rencontrer l'âme sœur…", // amour
+  "Ex : Apprendre une nouvelle langue…", // apprentissage
+  "Ex : Acheter ma maison…", // grand rêve
+  "Ex : Me remettre au sport…", // santé
+  "Ex : Lancer mon activité en freelance…", // entrepreneuriat
+  "Ex : Écrire mon premier livre…", // création
+  "Ex : Trouver ma voie…", // sens
+  "Ex : Courir un marathon…", // dépassement
+  "Ex : Devenir nomade digital…", // liberté
+  "Ex : M'engager pour une cause…", // impact
 ];
 let pi = 0;
 setInterval(() => {
   pi = (pi + 1) % placeholders.length;
   document.getElementById("dream-input").placeholder = placeholders[pi];
-}, 2500);
+}, 2000);
 
 /* ============================================================
          1. CONFIGURATION & DÉTECTION DE L'APPAREIL
