@@ -128,6 +128,7 @@
         margin-bottom: 20px;
         min-height: 60px;
       }
+
       .response-message p {
         margin: 0 0 10px;
       }
@@ -146,6 +147,87 @@
       .response-next {
         margin: 16px 0 0;
         color: #aee4ff;
+      }
+
+      /* État d'attente « compagnon qui te lit » (remplace le loader machine) */
+      .sphere-thinking {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        min-height: 90px;
+        padding: 10px 0;
+        text-align: center;
+      }
+      .st-dots {
+        position: relative;
+        display: inline-flex;
+        gap: 8px;
+      }
+      .st-dots::before {
+        content: "";
+        position: absolute;
+        inset: -22px -30px;
+        background: radial-gradient(
+          closest-side,
+          rgba(255, 204, 85, 0.4),
+          transparent 70%
+        );
+        opacity: 0.35;
+        filter: blur(8px);
+        animation: st-halo 3.2s ease-in-out infinite;
+      }
+      .st-dots span {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #ffcc55;
+        box-shadow: 0 0 10px rgba(255, 204, 85, 0.5);
+        opacity: 0.35;
+        animation: st-breathe 1.7s ease-in-out infinite both;
+      }
+      .st-dots span:nth-child(2) {
+        animation-delay: 0.22s;
+      }
+      .st-dots span:nth-child(3) {
+        animation-delay: 0.44s;
+      }
+      .st-line {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.6);
+        max-width: 240px;
+        transition: opacity 0.5s ease;
+      }
+      @keyframes st-breathe {
+        0%,
+        100% {
+          opacity: 0.3;
+          transform: translateY(0) scale(0.85);
+        }
+        42% {
+          opacity: 1;
+          transform: translateY(-3px) scale(1.08);
+        }
+      }
+      @keyframes st-halo {
+        0%,
+        100% {
+          opacity: 0.22;
+          transform: scale(0.92);
+        }
+        50% {
+          opacity: 0.45;
+          transform: scale(1.06);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .st-dots span,
+        .st-dots::before {
+          animation: none;
+        }
       }
       .loader {
         display: flex;

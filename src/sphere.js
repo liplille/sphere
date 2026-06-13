@@ -750,6 +750,47 @@ function triggerNextStep() {
 /* ============================================================
          14. ACTIONS DES FORMULAIRES
          ============================================================ */
+
+// État d'attente « compagnon qui te lit » : remplace le loader machine par
+// des points qui respirent + une phrase humaine qui alterne doucement.
+const THINKING_LINES = [
+  "Je prends le temps de bien te lire.",
+  "Je réfléchis à ce que tu viens de partager.",
+];
+let thinkingTimer = null;
+function startThinking() {
+  iaResponse.innerHTML =
+    '<div class="sphere-thinking">' +
+    '<div class="st-dots"><span></span><span></span><span></span></div>' +
+    '<p class="st-line" id="st-line"></p>' +
+    "</div>";
+  const lineEl = document.getElementById("st-line");
+  if (lineEl) lineEl.textContent = THINKING_LINES[0];
+  let i = 0;
+  clearInterval(thinkingTimer);
+  thinkingTimer = setInterval(() => {
+    const el = document.getElementById("st-line");
+    if (!el) {
+      clearInterval(thinkingTimer);
+      thinkingTimer = null;
+      return;
+    }
+    i = (i + 1) % THINKING_LINES.length;
+    el.style.opacity = "0";
+    setTimeout(() => {
+      const el2 = document.getElementById("st-line");
+      if (el2) {
+        el2.textContent = THINKING_LINES[i];
+        el2.style.opacity = "1";
+      }
+    }, 500);
+  }, 2200);
+}
+function stopThinking() {
+  clearInterval(thinkingTimer);
+  thinkingTimer = null;
+}
+
 document
   .getElementById("btn-submit-dream")
   .addEventListener("click", async () => {
@@ -763,10 +804,10 @@ document
     // il ne doit apparaître qu'une fois la réponse affichée.
     const btnClose = document.getElementById("btn-close-dream");
     if (btnClose) btnClose.style.display = "none";
-    iaResponse.innerHTML =
-      '<div class="loader"><div></div><div></div><div></div></div>';
+    startThinking();
 
     const res = await API.submitIntention(val);
+    stopThinking();
 
     // Erreur serveur/réseau : retour au formulaire avec un message dédié,
     // sans vider le texte (l'utilisateur peut réessayer tel quel).
@@ -831,7 +872,7 @@ document
     emailFormView.style.display = "none";
     emailSuccessView.style.display = "block";
     emailSuccessView.innerHTML =
-      '<h2 style="margin-bottom: 0">Création du lien...</h2><div class="loader" style="margin-top:20px"><div></div><div></div><div></div></div>';
+      '<h2 style="margin-bottom: 0">Création du lien...</h2><div class="st-dots" style="margin-top:24px"><span></span><span></span><span></span></div>';
 
     HUD.setState("PERSONNALISATION...", "#ffcc55"); // S'allume en Or
 
